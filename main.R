@@ -79,13 +79,18 @@
 
 #Download non comtrade data
   #statistica
+
+#save data to file
+
+#load data if not redownloading it
   
 #combine data sets
 #manipulate data
   
 #graphs
+library(ggplot2)
 
-
-
+#TODO: the data is downloaded as strings, so I need to convert it to numeric if I want to graph it.
+s1$data$TradeValue
 
 
