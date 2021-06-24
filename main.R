@@ -23,7 +23,8 @@
                    ,"type=",type,"&" #type of trade (c=commodities)
                    ,"freq=",freq,"&" #frequency
                    ,"px=",px,"&" #classification
-                   ,"ps=",ps,"&" #time period
+                   ,"ps=",ps,"&" #time period.
+                   #Dont' need to list each time month. For example, according to https://comtrade.un.org/data/doc/api/#DataRequests if you are using monthly data, you can just type the years in
                    ,"r=",r,"&" #reporting area
                    ,"p=",p,"&" #partner country
                    ,"rg=",rg,"&" #trade flow
@@ -60,6 +61,10 @@
 #define hscodes of interest
 
 #define countries of interest (all?)
+  #reporters
+  #partners
+  #https://wits.worldbank.org/wits/wits/witshelp/content/codes/country_codes.htm
+  
   
 #Download comtrade data
   {
@@ -73,8 +78,18 @@
     #https://mail.rfaqs.com/reading-and-writing-json-files-in-r/
     jsons1 <- toJSON(s1)
     write(jsons1,"data/s1.json")
-  
+    
   #actual data download goes here
+    country_list = "124,484,842"
+    period_list = "201801,201802,201803"
+      #124 
+      #842 is USA
+    s3 <- get.Comtrade(r="842", p="0", ps="201201,201202,201203", freq="M")
+    data_comtrade <- get.Comtrade(r = country_list
+                                  ,p = country_list
+                                  ,freq ="M"
+                                  ,ps = period_list
+                                  )
   }
 
 #Download non comtrade data
@@ -90,10 +105,23 @@
 #graphs
 library(ggplot2)
 
-#TODO: the data is downloaded as strings, so I need to convert it to numeric if I want to graph it.
+#The data is downloaded as strings, so I need to convert it to numeric if I want to graph it.
 s1$data$TradeValue <- as.numeric(s1$data$TradeValue)
 s1$data$yr <- as.numeric(as.character(s1$data$yr))
 
-#graph doesn't work but I'm not sure why
-ggplot(s1$data, mapping = aes("ptTitle","TradeValue")) + geom_bar(stat = "identity")
+#subset data
+  #example of how to both do bar chart and how to subset a dataframe is from
+  #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+  subsets1 <- subset(data_comtrade$data, (rgDesc %in% c("Imports") & ptTitle %in% ("Canada") & rtTitle %in% ("United States of America")))
+  
+
+#graph subset
+  theme_set(theme_bw())
+    # Makes graphs look nicer.
+    # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+  ggplot(subsets1, mapping = aes(x = period, y = TradeValue, group=1)) + #group specifies which data should be drawn as a single line
+    geom_line()+ #adds the lines to the graph
+    geom_point() #adds the points to the graph
+      #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization
+  
 
