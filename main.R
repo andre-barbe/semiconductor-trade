@@ -91,6 +91,9 @@
 library(ggplot2)
 
 #TODO: the data is downloaded as strings, so I need to convert it to numeric if I want to graph it.
-s1$data$TradeValue
+s1$data$TradeValue <- as.numeric(s1$data$TradeValue)
+s1$data$yr <- as.numeric(as.character(s1$data$yr))
 
+#graph doesn't work but I'm not sure why
+ggplot(s1$data, mapping = aes("ptTitle","TradeValue")) + geom_bar(stat = "identity")
 
