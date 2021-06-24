@@ -1,5 +1,9 @@
 #This file currently does everything for the project: downloading data, manipulating it, creating graphs (eventually)
 
+#Clear variables
+  #Source: https://www.geeksforgeeks.org/clear-the-console-and-the-environment-in-r-studio/
+  rm(list=ls())
+
 #Program options
   download_data <- 1
 
@@ -67,54 +71,51 @@
   
   
 #Download comtrade data
-  {
   #Example data download
     #Example 1 from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
     library("rjson")
-    s1 <- get.Comtrade(r="842", p="124,484")
-    s1
+    #s1 <- get.Comtrade(r="842", p="124,484")
+    #s1
+    
+  #example 3
+    #s3 <- get.Comtrade(r="842", p="0", ps="201201,201202,201203", freq="M")
   
   #export data to file so don't have to re-download
     #https://mail.rfaqs.com/reading-and-writing-json-files-in-r/
-    jsons1 <- toJSON(s1)
-    write(jsons1,"data/s1.json")
+    #jsons1 <- toJSON(s1)
+    #write(jsons1,"data/s1.json")
     
   #actual data download goes here
     country_list = "124,484,842"
       #124 
       #842 is USA
     #Define period list
-      library(numbers)
-      period_beginning =201701
-      period_end = 201801
-      period_list=period_beginning
-      period_current=period_beginning
-      while (period_current < period_end) {
-        #increment period
-          if (mod(period_current,100)==12){
-            period_current=period_current+89
-          }
-          else period_current=period_current+1
-          
-        #add current period to list
-          period_list=paste(period_list,period_current,sep=",")
-        
-      }
+      period_list=c("2018","2019")
     #hs code list
     #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
 
-    s3 <- get.Comtrade(r="842", p="0", ps="201201,201202,201203", freq="M")
-    data_comtrade <- get.Comtrade(r = country_list
-                                  ,p = country_list
-                                  ,freq ="M"
-                                  ,ps = period_list
-                                  )
-  }
+    #Actual data
+      #Create the big overall data frame so that it can be used in the loop
+        list_data_comtrade = list() #https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop/29419402
+      for (ps in period_list){
+        data_comtrade_ps <- get.Comtrade(r = country_list
+                                    ,p = country_list
+                                    ,freq ="M"
+                                    ,ps = ps
+                                    )
+        list_data_comtrade[[ps]] <- data_comtrade_ps$data
+        #Add a pause
+          #I think this is necessary to prevent the WB system from rejecting the requests as too frequent
+          #How to pause: https://stackoverflow.com/questions/34859558/set-a-delay-between-two-instructions-in-r
+          Sys.sleep(3) 
+      }
+      data_comtrade = do.call(rbind, list_data_comtrade)
+  
 
 #Download non comtrade data
   #statistica
 
-  
+
 #I don't think a single download can can have more than 12 months of data
   #website: https://comtrade.un.org/data/
   
@@ -129,13 +130,13 @@
 library(ggplot2)
 
 #The data is downloaded as strings, so I need to convert it to numeric if I want to graph it.
-s1$data$TradeValue <- as.numeric(s1$data$TradeValue)
-s1$data$yr <- as.numeric(as.character(s1$data$yr))
+#s1$data$TradeValue <- as.numeric(s1$data$TradeValue)
+#s1$data$yr <- as.numeric(as.character(s1$data$yr))
 
 #subset data
   #example of how to both do bar chart and how to subset a dataframe is from
   #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-  subsets1 <- subset(data_comtrade$data, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America")))
+  subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America")))
   
 
 #graph subset
@@ -155,6 +156,4 @@ s1$data$yr <- as.numeric(as.character(s1$data$yr))
            ,x="time"
            ,y="Trade Value (USD)"
              ) 
-    
-  
 
