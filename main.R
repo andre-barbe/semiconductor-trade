@@ -1,5 +1,9 @@
 #This file currently does everything for the project: downloading data, manipulating it, creating graphs (eventually)
 
+#Clear variables
+  #Source: https://www.geeksforgeeks.org/clear-the-console-and-the-environment-in-r-studio/
+  rm(list=ls())
+
 #Program options
   download_data <- 1
 
@@ -23,7 +27,8 @@
                    ,"type=",type,"&" #type of trade (c=commodities)
                    ,"freq=",freq,"&" #frequency
                    ,"px=",px,"&" #classification
-                   ,"ps=",ps,"&" #time period
+                   ,"ps=",ps,"&" #time period.
+                   #Dont' need to list each time month. For example, according to https://comtrade.un.org/data/doc/api/#DataRequests if you are using monthly data, you can just type the years in
                    ,"r=",r,"&" #reporting area
                    ,"p=",p,"&" #partner country
                    ,"rg=",rg,"&" #trade flow
@@ -60,37 +65,90 @@
 #define hscodes of interest
 
 #define countries of interest (all?)
+  #reporters
+  #partners
+  #https://wits.worldbank.org/wits/wits/witshelp/content/codes/country_codes.htm
+  
   
 #Download comtrade data
-  {
-  #Example data download
-    #Example 1 from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
-    library("rjson")
-    s1 <- get.Comtrade(r="842", p="124,484")
-    s1
-  
-  #export data to file so don't have to re-download
-    #https://mail.rfaqs.com/reading-and-writing-json-files-in-r/
-    jsons1 <- toJSON(s1)
-    write(jsons1,"data/s1.json")
-  
-  #actual data download goes here
-  }
+  library("rjson")
+  #Examples from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
+ 
+  #Define what to download for COMTRADE
+    country_list = "124,484,842"
+      #124 Canada
+      #842 USA
+      #reference: https://comtrade.un.org/db/mr/rfreporterslist.aspx
+    #Define period list
+      #I don't think a single download can can have more than 12 months of data
+      #website: https://comtrade.un.org/data/
+      period_list=c("2018","2019")
+    #hs code list
+      #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
+      #8541 and 8542 are semiconductors
+      hs_codes="8541,8542,848071,8486,854370,854390,903082,903141"
+    #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
+
+  #Run download loop
+    #Create list that will house each data download
+      list_data_comtrade = list() #https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop/29419402
+    #for loop that will download each year. I believe the API will only let me download 12 periods at most
+        for (ps in period_list){
+          #download data call
+            data_comtrade_ps <- get.Comtrade(r = country_list
+                                      ,p = country_list
+                                      ,freq ="M"
+                                      ,ps = ps
+                                      ,cc=hs_codes
+                                      )
+          #save downloaded data to the list
+            list_data_comtrade[[ps]] <- data_comtrade_ps$data
+        
+          #Add a pause before downloading again
+            #I think this is necessary to prevent the WB system from rejecting the requests as too frequent
+            #How to pause: https://stackoverflow.com/questions/34859558/set-a-delay-between-two-instructions-in-r
+            Sys.sleep(3) 
+        }
+    
+      #Combine all the downloaded data into a single data frame
+        data_comtrade = do.call(rbind, list_data_comtrade)
+
 
 #Download non comtrade data
   #statistica
+
 
 #save data to file
 
 #load data if not redownloading it
   
-#combine data sets
-#manipulate data
+#Manipulate data sets
+  #Combine data
   
 #graphs
 library(ggplot2)
 
-#TODO: the data is downloaded as strings, so I need to convert it to numeric if I want to graph it.
-s1$data$TradeValue
-
+  #subset data
+    #example of how to both do bar chart and how to subset a dataframe is from
+    #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+    subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & cmdCode %in% ("8542")))
+    
+  
+  #graph subset
+      # Makes graphs look nicer.
+      # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+    ggplot(subsets1, mapping = aes(x = period, y = TradeValue, group=ptTitle)) + #group specifies which data should be drawn as a single line
+      #adds lines and legend
+        geom_line(aes(linetype=ptTitle))+
+        #geom_lineadds the lines to the graph.
+        #linetype specification adds teh legend
+      #add big points (scatterplot)
+        #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
+        geom_point()+ 
+      #Label title and axis
+        #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
+        labs(title="US imports"
+             ,x="time"
+             ,y="Trade Value (USD)"
+               ) 
 
