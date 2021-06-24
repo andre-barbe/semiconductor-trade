@@ -112,16 +112,26 @@ s1$data$yr <- as.numeric(as.character(s1$data$yr))
 #subset data
   #example of how to both do bar chart and how to subset a dataframe is from
   #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-  subsets1 <- subset(data_comtrade$data, (rgDesc %in% c("Imports") & ptTitle %in% ("Canada") & rtTitle %in% ("United States of America")))
+  subsets1 <- subset(data_comtrade$data, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America")))
   
 
 #graph subset
-  theme_set(theme_bw())
     # Makes graphs look nicer.
     # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-  ggplot(subsets1, mapping = aes(x = period, y = TradeValue, group=1)) + #group specifies which data should be drawn as a single line
-    geom_line()+ #adds the lines to the graph
-    geom_point() #adds the points to the graph
-      #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization
+  ggplot(subsets1, mapping = aes(x = period, y = TradeValue, group=ptTitle)) + #group specifies which data should be drawn as a single line
+    #adds lines and legend
+      geom_line(aes(linetype=ptTitle))+
+      #geom_lineadds the lines to the graph.
+      #linetype specification adds teh legend
+    #add big points (scatterplot)
+      #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
+      geom_point()+ 
+    #Label title and axis
+      #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
+      labs(title="US imports"
+           ,x="time"
+           ,y="Trade Value (USD)"
+             ) 
+    
   
 
