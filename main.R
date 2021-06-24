@@ -76,13 +76,17 @@
  
   #Define what to download for COMTRADE
     country_list = "124,484,842"
-      #124 
-      #842 is USA
+      #124 Canada
+      #842 USA
+      #reference: https://comtrade.un.org/db/mr/rfreporterslist.aspx
     #Define period list
       #I don't think a single download can can have more than 12 months of data
       #website: https://comtrade.un.org/data/
       period_list=c("2018","2019")
     #hs code list
+      #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
+      #8541 and 8542 are semiconductors
+      hs_codes="8541,8542,848071,8486,854370,854390,903082,903141"
     #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
 
   #Run download loop
@@ -95,6 +99,7 @@
                                       ,p = country_list
                                       ,freq ="M"
                                       ,ps = ps
+                                      ,cc=hs_codes
                                       )
           #save downloaded data to the list
             list_data_comtrade[[ps]] <- data_comtrade_ps$data
@@ -126,7 +131,7 @@ library(ggplot2)
   #subset data
     #example of how to both do bar chart and how to subset a dataframe is from
     #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-    subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America")))
+    subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & cmdCode %in% ("8542")))
     
   
   #graph subset
