@@ -81,9 +81,28 @@
     
   #actual data download goes here
     country_list = "124,484,842"
-    period_list = "201801,201802,201803"
       #124 
       #842 is USA
+    #Define period list
+      library(numbers)
+      period_beginning =201701
+      period_end = 201801
+      period_list=period_beginning
+      period_current=period_beginning
+      while (period_current < period_end) {
+        #increment period
+          if (mod(period_current,100)==12){
+            period_current=period_current+89
+          }
+          else period_current=period_current+1
+          
+        #add current period to list
+          period_list=paste(period_list,period_current,sep=",")
+        
+      }
+    #hs code list
+    #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
+
     s3 <- get.Comtrade(r="842", p="0", ps="201201,201202,201203", freq="M")
     data_comtrade <- get.Comtrade(r = country_list
                                   ,p = country_list
@@ -95,6 +114,10 @@
 #Download non comtrade data
   #statistica
 
+  
+#I don't think a single download can can have more than 12 months of data
+  #website: https://comtrade.un.org/data/
+  
 #save data to file
 
 #load data if not redownloading it
