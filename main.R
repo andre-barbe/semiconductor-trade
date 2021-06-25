@@ -1,4 +1,4 @@
-#This file currently does everything for the project: downloading data, manipulating it, creating graphs (eventually)
+#This file does everything for the project: downloading data, manipulating it, creating graphs (or calls the files that do)
 
 #Clear variables
   #Source: https://www.geeksforgeeks.org/clear-the-console-and-the-environment-in-r-studio/
@@ -30,9 +30,6 @@
     #define a version readable by the UNCOMTRADE API
     #https://stackoverflow.com/questions/2098368/concatenate-a-vector-of-strings-character
     #You want to use only collapse, not also sep, otherwise you get weird results
-
-    
-    
   
 #Comtrade data
   #Download Comtrade Data
@@ -63,13 +60,6 @@
   #Load Data
     data_trade_elasticity <- read.csv(file="data/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
     #colClasses tells the readCSV that the HS6 is a character, not numeric. Otherwise it thinks it is numeric and deletes leading zeroes
-  
-
-  
-  
-#Manipulate data sets
-
-
   
 #graphs
 library(ggplot2)
