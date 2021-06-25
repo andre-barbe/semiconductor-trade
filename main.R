@@ -5,7 +5,7 @@
   rm(list=ls())
 
 #Program options
-  download_data <- 1
+  download_data <- 0
 
 # Define script to download comtrade data
   # from https://comtrade.un.org/Data/Doc/api/ex/r
@@ -90,10 +90,11 @@
     #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
 
   #Run download loop
+    if(download_data==1){
     #Create list that will house each data download
       list_data_comtrade = list() #https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop/29419402
     #for loop that will download each year. I believe the API will only let me download 12 periods at most
-        for (ps in period_list){
+          for (ps in period_list){
           #download data call
             data_comtrade_ps <- get.Comtrade(r = country_list
                                       ,p = country_list
@@ -112,15 +113,20 @@
     
       #Combine all the downloaded data into a single data frame
         data_comtrade = do.call(rbind, list_data_comtrade)
-
+      
+      #save COMTRADE data to file
+        #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
+        save(data_comtrade,file="data/data_comtrade.Rda") 
+    }
 
 #Download non comtrade data
   #statistica
 
 
-#save data to file
 
-#load data if not redownloading it
+#load data
+    #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
+    data_comtrade2 <- load(file="data/data_comtrade.Rda")
   
 #Manipulate data sets
   #Combine data
@@ -129,10 +135,14 @@
 library(ggplot2)
 
   #subset data
-    #example of how to both do bar chart and how to subset a dataframe is from
-    #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-    subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & cmdCode %in% ("8542")))
-    
+    #only look at certain variables (imports) and for certain countries and HS codes
+      #example of how to both do bar chart and how to subset a dataframe is from
+      #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & cmdCode %in% ("8542")))
+    #aggregate certain HS codes to form product groups
+      #aggregate TradeValue by group
+        #https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
+        #aggregate(subsets1$TradeValue, by=list(Category=subsets1$ptTitle), FUN=sum)
   
   #graph subset
       # Makes graphs look nicer.
@@ -151,4 +161,6 @@ library(ggplot2)
              ,x="time"
              ,y="Trade Value (USD)"
                ) 
+    
+    #Do I need to deseasonalize monthly data? Probably not worth the trouble
 
