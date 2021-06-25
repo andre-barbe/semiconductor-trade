@@ -75,13 +75,16 @@
   #Examples from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
  
   #Define what to download for COMTRADE
-    country_list = "124,484,842,410,702"
+    country_list = "124,490,842,410,702"
       #Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
+      #I think this can only run with 5 countries max. When I did 6 countries, I got an error
+      #484 Mexico
       #124 Canada
+      #156 China
       #842 USA
       #410 South Korea
       #490 Other Asia (Taiwan)
-      #Taiwan is not listed separately
+        #Taiwan is not listed separately, it is part of "other asia NES"
         #https://unstats.un.org/unsd/tradekb/Knowledgebase/50104/Taiwan-Province-of-China-Trade-data
       #702 Singapore  
     
@@ -89,6 +92,7 @@
       #I don't think a single download can can have more than 12 months of data
       #website: https://comtrade.un.org/data/
       period_list=c("2017","2019")
+      #for some reason, 2018 data won't download.
     #hs code list
       #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
       #8541 and 8542 are semiconductors
