@@ -20,11 +20,12 @@
     #https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
     list_hs_chemicals=c("281111","370790","391190","392099")
   #define an r readable version of the hs codes
-    hs_codes_r=c(list_hs_semi,list_hs_SME)
+    hs_codes_r=c(list_hs_semi,list_hs_SME,list_hs_chemicals)
     #how to combine lists: https://stackoverflow.com/questions/36665492/how-to-combine-two-lists-in-r
   hs_codes_r4=substr(hs_codes_r,1,4)
     #define a HS4 equivalent, for use in the CEPII data
     #https://statisticsglobe.com/r-extract-first-or-last-n-characters-from-string
+    #I considered going to the HS2 level but that seems to be way too broad. The sigmas within each HS2 were all over the place
   hs_codes=paste(hs_codes_r,sep=",")
     #define a version readable by the UNCOMTRADE API
 
@@ -127,5 +128,6 @@ library(ggplot2)
         #this is necessary so that the new row binds with the existing datframe
     #Merge the mean row with the existing dataframe
       data_trade_elasticity_subset <- rbind(data_trade_elasticity_subset,mean_data)
+      data_trade_elasticity_subset
     
 
