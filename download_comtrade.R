@@ -84,11 +84,6 @@ country_list = "124,842,410,702,490"
 #website: https://comtrade.un.org/data/
 period_list=c("2017","2019")
 #for some reason, 2018 data won't download.
-#hs code list
-#28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
-#8541 and 8542 are semiconductors
-hs_codes="8541,8542,848071,8486,854370,854390,903082,903141"
-#Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
 
 #Run download loop
 if(download_data==1){

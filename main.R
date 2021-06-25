@@ -5,16 +5,29 @@
   rm(list=ls())
 
 #Program options
-  download_data <- 1
+  download_data <- 0
 
 #Download Comtrade data
+  #hs code list
+  #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
+  #8541 and 8542 are semiconductors
+  hs_codes_r=c("8541","8542","848071","8486","854370","854390","903082","903141")
+  hs_codes_r4=substr(hs_codes_r,1,4)
+    #https://statisticsglobe.com/r-extract-first-or-last-n-characters-from-string
+  
+  hs_codes=paste(hs_codes_r,sep=",")
+  
+  #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
   source("download_comtrade.R")
   
 #Download non comtrade data
   #CEPII Data
     #already download
     #Source: http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=35
-
+    #"The trade elasticity is the reaction of bilateral import flows (in value) to a change in the applied import tariff for a given product (as defined by the WCO’s six-digit Harmonized System classification in revision 2007 - hereafter HS6)."
+    #Trade elasticities for semiconductors are very large in magnitude
+    data_trade_elasticity <- read.csv(file="data/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
+      #colClasses tells the readCSV that the HS6 is a character, not numeric. Otherwise it thinks it is numeric and deletes leading zeroes
 
 
 #load data
@@ -73,5 +86,19 @@ library(ggplot2)
              ,y="Trade Value (USD)"
                ) 
     
-    #Do I need to deseasonalize monthly data? Probably not worth the trouble
+    data_trade_elasticity$HS6
+    data_trade_elasticity_subset <- subset(data_trade_elasticity, startsWith(data_trade_elasticity$HS6,hs_codes_r4))
+      #based on answer here but changed grepl to startswith
+        #https://stackoverflow.com/questions/5823503/pattern-matching-using-a-wildcard
+      #Startswith documentation: https://www.rdocumentation.org/packages/gdata/versions/2.18.0/topics/startsWith
+    data_trade_elasticity_subset
+    mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE))
+      #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/mean
+      #na.rum =TRUE means it deletes NAs (otherwise it just gives NA for the mean)
+    
+    names(mean_data) <- names(data_trade_elasticity_subset)
+    data_trade_elasticity_subset <- rbind(data_trade_elasticity_subset,mean_data)
+
+    
+    
 
