@@ -5,7 +5,7 @@
   rm(list=ls())
 
 #Program options
-  download_data <- 0
+  download_data <- 1
 
 # Define script to download comtrade data
   # from https://comtrade.un.org/Data/Doc/api/ex/r
@@ -75,14 +75,20 @@
   #Examples from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
  
   #Define what to download for COMTRADE
-    country_list = "124,484,842"
+    country_list = "124,484,842,410,702"
+      #Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
       #124 Canada
       #842 USA
-      #reference: https://comtrade.un.org/db/mr/rfreporterslist.aspx
+      #410 South Korea
+      #490 Other Asia (Taiwan)
+      #Taiwan is not listed separately
+        #https://unstats.un.org/unsd/tradekb/Knowledgebase/50104/Taiwan-Province-of-China-Trade-data
+      #702 Singapore  
+    
     #Define period list
       #I don't think a single download can can have more than 12 months of data
       #website: https://comtrade.un.org/data/
-      period_list=c("2018","2019")
+      period_list=c("2017","2019")
     #hs code list
       #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
       #8541 and 8542 are semiconductors
@@ -132,8 +138,14 @@
   
 #Manipulate data sets
     #convert Trade values from strings to numerics
-    data_comtrade$TradeValue <- as.numeric(data_comtrade$TradeValue)
-  #Combine data
+      data_comtrade$TradeValue <- as.numeric(data_comtrade$TradeValue)
+    #convert periods to dates
+      #see example in https://stackoverflow.com/questions/41327852/convert-a-yyyymm-format-to-date-in-r
+      data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),01), format = "%Y%m%d")
+  #Define HS code aggregates
+    data_comtrade$hs_group=""
+    data_comtrade$hs_group[data_comtrade$cmdCode=="8541"]="semiconductors"
+    data_comtrade$hs_group[data_comtrade$cmdCode=="8542"]="semiconductors"
   
 #graphs
 library(ggplot2)
@@ -142,7 +154,7 @@ library(ggplot2)
     #only look at certain variables (imports) and for certain countries and HS codes
       #example of how to both do bar chart and how to subset a dataframe is from
       #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & cmdCode %in% c("8541","8542")))
+      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & hs_group %in% c("semiconductors")))
     #aggregate certain HS codes to form product groups
       #aggregate TradeValue by group
         #https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
