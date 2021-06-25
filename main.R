@@ -7,43 +7,66 @@
 #Program options
   download_data <- 0
 
-#Download Comtrade data
-  #hs code list
-  #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
-  #8541 and 8542 are semiconductors
-  hs_codes_r=c("8541","8542","848071","8486","854370","854390","903082","903141")
+#Define semiconductor related HS codes
+  #Reference 1: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
+    #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
+  #semiconductors themselves
+    #8541 and 8542 are semiconductors
+    list_hs_semi=c("8541","8542")
+  #SME
+    #Source: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
+    list_hs_SME=c("848071","8486","854370","854390","903082","903141")
+  #SM Chemicals
+    #https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
+    list_hs_chemicals=c("281111","370790","391190","392099")
+  #define an r readable version of the hs codes
+    hs_codes_r=c(list_hs_semi,list_hs_SME)
+    #how to combine lists: https://stackoverflow.com/questions/36665492/how-to-combine-two-lists-in-r
   hs_codes_r4=substr(hs_codes_r,1,4)
+    #define a HS4 equivalent, for use in the CEPII data
     #https://statisticsglobe.com/r-extract-first-or-last-n-characters-from-string
-  
   hs_codes=paste(hs_codes_r,sep=",")
-  
-  #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
-  source("download_comtrade.R")
-  
-#Download non comtrade data
-  #CEPII Data
-    #already download
-    #Source: http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=35
-    #"The trade elasticity is the reaction of bilateral import flows (in value) to a change in the applied import tariff for a given product (as defined by the WCO’s six-digit Harmonized System classification in revision 2007 - hereafter HS6)."
-    #Trade elasticities for semiconductors are very large in magnitude
-    data_trade_elasticity <- read.csv(file="data/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
-      #colClasses tells the readCSV that the HS6 is a character, not numeric. Otherwise it thinks it is numeric and deletes leading zeroes
+    #define a version readable by the UNCOMTRADE API
 
-
-#load data
+    
+    
+  
+#Comtrade data
+  #Download Comtrade Data
+    source("download_comtrade.R")
+  #load Data
     #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
     data_comtrade <- readRDS(file="data/data_comtrade.Rda")
-  
-#Manipulate data sets
+  #Clean data
     #convert Trade values from strings to numerics
       data_comtrade$TradeValue <- as.numeric(data_comtrade$TradeValue)
     #convert periods to dates
       #see example in https://stackoverflow.com/questions/41327852/convert-a-yyyymm-format-to-date-in-r
       data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),01), format = "%Y%m%d")
-  #Define HS code aggregates
-    data_comtrade$hs_group=""
-    data_comtrade$hs_group[data_comtrade$cmdCode=="8541"]="semiconductors"
-    data_comtrade$hs_group[data_comtrade$cmdCode=="8542"]="semiconductors"
+  #Define semiconductor related subgroups
+      #for example, SME vs SM inputs vs SM (themselves)
+      data_comtrade$hs_group=""
+      data_comtrade$hs_group[data_comtrade$cmdCode %in% list_hs_semi]="semiconductors"
+      data_comtrade$hs_group[data_comtrade$cmdCode %in% list_hs_SME]="SME"
+      data_comtrade$hs_group[data_comtrade$cmdCode %in% list_hs_chemicals]="semi chemicals"
+  
+#CEPII Data
+  #Description
+    #"The trade elasticity is the reaction of bilateral import flows (in value) to a change in the applied import tariff for a given product (as defined by the WCO’s six-digit Harmonized System classification in revision 2007 - hereafter HS6)."
+    #Trade elasticities for semiconductors are very large in magnitude
+  #Download Data
+    #already download
+    #Source: http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=35
+  #Load Data
+    data_trade_elasticity <- read.csv(file="data/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
+    #colClasses tells the readCSV that the HS6 is a character, not numeric. Otherwise it thinks it is numeric and deletes leading zeroes
+  
+
+  
+  
+#Manipulate data sets
+
+
   
 #graphs
 library(ggplot2)
@@ -52,7 +75,7 @@ library(ggplot2)
     #only look at certain variables (imports) and for certain countries and HS codes
       #example of how to both do bar chart and how to subset a dataframe is from
       #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & hs_group %in% c("semiconductors")))
+      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & hs_group %in% c("SME")))
     #aggregate certain HS codes to form product groups
       #aggregate TradeValue by group
         #https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
@@ -85,20 +108,24 @@ library(ggplot2)
              ,x="time"
              ,y="Trade Value (USD)"
                ) 
-    
-    data_trade_elasticity$HS6
-    data_trade_elasticity_subset <- subset(data_trade_elasticity, startsWith(data_trade_elasticity$HS6,hs_codes_r4))
-      #based on answer here but changed grepl to startswith
-        #https://stackoverflow.com/questions/5823503/pattern-matching-using-a-wildcard
-      #Startswith documentation: https://www.rdocumentation.org/packages/gdata/versions/2.18.0/topics/startsWith
-    data_trade_elasticity_subset
-    mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE))
+  #Create table on trade data elascitiies
+    #subset CEPII data to only look at those related to semiconductors
+    data_trade_elasticity_subset <- subset(data_trade_elasticity
+                                           , startsWith(data_trade_elasticity$HS6,
+                                              #based on answer here but changed grepl to startswith
+                                              #https://stackoverflow.com/questions/5823503/pattern-matching-using-a-wildcard
+                                              #Startswith documentation: https://www.rdocumentation.org/packages/gdata/versions/2.18.0/topics/startsWith
+                                              hs_codes_r4))
+                                                #hs_codes_r4 is the first 4 digit of the semi-related HS codes.
+                                                #I do this because some of the semi codes are 6 digit, but only their 4 digit parent (or sibling) is in the CEPII data
+
+    #Create row with average trade elasticity of all( not just trade related) CEPII HSes
+      mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE))
       #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/mean
       #na.rum =TRUE means it deletes NAs (otherwise it just gives NA for the mean)
-    
-    names(mean_data) <- names(data_trade_elasticity_subset)
-    data_trade_elasticity_subset <- rbind(data_trade_elasticity_subset,mean_data)
-
-    
+      names(mean_data) <- names(data_trade_elasticity_subset)
+        #this is necessary so that the new row binds with the existing datframe
+    #Merge the mean row with the existing dataframe
+      data_trade_elasticity_subset <- rbind(data_trade_elasticity_subset,mean_data)
     
 
