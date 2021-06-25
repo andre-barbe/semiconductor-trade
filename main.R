@@ -5,7 +5,7 @@
   rm(list=ls())
 
 #Program options
-  download_data <- 0
+  download_data <- 1
 
 #Define semiconductor related HS codes
   #Reference 1: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
@@ -26,8 +26,10 @@
     #define a HS4 equivalent, for use in the CEPII data
     #https://statisticsglobe.com/r-extract-first-or-last-n-characters-from-string
     #I considered going to the HS2 level but that seems to be way too broad. The sigmas within each HS2 were all over the place
-  hs_codes=paste(hs_codes_r,sep=",")
+  hs_codes=paste(hs_codes_r,collapse=',')
     #define a version readable by the UNCOMTRADE API
+    #https://stackoverflow.com/questions/2098368/concatenate-a-vector-of-strings-character
+    #You want to use only collapse, not also sep, otherwise you get weird results
 
     
     
