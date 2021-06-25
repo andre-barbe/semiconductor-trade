@@ -75,7 +75,7 @@
   #Examples from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
  
   #Define what to download for COMTRADE
-    country_list = "124,490,842,410,702"
+    country_list = "124,842,410,702,490"
       #Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
       #I think this can only run with 5 countries max. When I did 6 countries, I got an error
       #484 Mexico
