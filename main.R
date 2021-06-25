@@ -75,69 +75,109 @@
   #Examples from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
  
   #Define what to download for COMTRADE
-    country_list = "124,484,842"
+    country_list = "124,842,410,702,490"
+      #Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
+      #I think this can only run with 5 countries max. When I did 6 countries, I got an error
+      #484 Mexico
       #124 Canada
+      #156 China
       #842 USA
-      #reference: https://comtrade.un.org/db/mr/rfreporterslist.aspx
+      #410 South Korea
+      #490 Other Asia (Taiwan)
+        #Taiwan is not listed separately, it is part of "other asia NES"
+        #https://unstats.un.org/unsd/tradekb/Knowledgebase/50104/Taiwan-Province-of-China-Trade-data
+      #702 Singapore  
+    
     #Define period list
       #I don't think a single download can can have more than 12 months of data
       #website: https://comtrade.un.org/data/
-      period_list=c("2018","2019")
+      period_list=c("2017","2019")
+      #for some reason, 2018 data won't download.
     #hs code list
       #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
       #8541 and 8542 are semiconductors
       hs_codes="8541,8542,848071,8486,854370,854390,903082,903141"
     #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
 
-  #Run download loop
-    #Create list that will house each data download
-      list_data_comtrade = list() #https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop/29419402
-    #for loop that will download each year. I believe the API will only let me download 12 periods at most
+      #Run download loop
+      if(download_data==1){
+        #Create list that will house each data download
+        list_data_comtrade = list() #https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop/29419402
+        #for loop that will download each year. I believe the API will only let me download 12 periods at most
         for (ps in period_list){
           #download data call
-            data_comtrade_ps <- get.Comtrade(r = country_list
-                                      ,p = country_list
-                                      ,freq ="M"
-                                      ,ps = ps
-                                      ,cc=hs_codes
-                                      )
+          data_comtrade_ps <- get.Comtrade(r = country_list
+                                           ,p = country_list
+                                           ,freq ="M"
+                                           ,ps = ps
+                                           ,cc=hs_codes
+          )
           #save downloaded data to the list
-            list_data_comtrade[[ps]] <- data_comtrade_ps$data
-        
+          list_data_comtrade[[ps]] <- data_comtrade_ps$data
+          
           #Add a pause before downloading again
-            #I think this is necessary to prevent the WB system from rejecting the requests as too frequent
-            #How to pause: https://stackoverflow.com/questions/34859558/set-a-delay-between-two-instructions-in-r
-            Sys.sleep(3) 
+          #I think this is necessary to prevent the WB system from rejecting the requests as too frequent
+          #How to pause: https://stackoverflow.com/questions/34859558/set-a-delay-between-two-instructions-in-r
+          Sys.sleep(3) 
         }
-    
-      #Combine all the downloaded data into a single data frame
+        
+        #Combine all the downloaded data into a single data frame
         data_comtrade = do.call(rbind, list_data_comtrade)
-
+        
+        #save COMTRADE data to file
+          #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
+          #using "saveRDS" instead of "save" because "save" saves *all* objects and with their current names.
+          #so when they are loaded, it overwrites everything and makes a huge mess
+          saveRDS(data_comtrade,file="data/data_comtrade.Rda") 
+      }
 
 #Download non comtrade data
   #statistica
 
 
-#save data to file
 
-#load data if not redownloading it
+#load data
+    #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
+    data_comtrade <- readRDS(file="data/data_comtrade.Rda")
   
 #Manipulate data sets
-  #Combine data
+    #convert Trade values from strings to numerics
+      data_comtrade$TradeValue <- as.numeric(data_comtrade$TradeValue)
+    #convert periods to dates
+      #see example in https://stackoverflow.com/questions/41327852/convert-a-yyyymm-format-to-date-in-r
+      data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),01), format = "%Y%m%d")
+  #Define HS code aggregates
+    data_comtrade$hs_group=""
+    data_comtrade$hs_group[data_comtrade$cmdCode=="8541"]="semiconductors"
+    data_comtrade$hs_group[data_comtrade$cmdCode=="8542"]="semiconductors"
   
 #graphs
 library(ggplot2)
 
   #subset data
-    #example of how to both do bar chart and how to subset a dataframe is from
-    #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-    subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & cmdCode %in% ("8542")))
-    
-  
+    #only look at certain variables (imports) and for certain countries and HS codes
+      #example of how to both do bar chart and how to subset a dataframe is from
+      #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & hs_group %in% c("semiconductors")))
+    #aggregate certain HS codes to form product groups
+      #aggregate TradeValue by group
+        #https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
+        aggregate1 <- aggregate(x = subsets1$TradeValue #I can't keep the variable name so I have to rename x to TradeValue later
+                                #aggregattion grouping
+                                  #aggregate all entries with the same time period and partner country title
+                                  #the name before the "=" tells what the new variable names are
+                                  ,by=list(period=subsets1$period 
+                                           ,ptTitle=subsets1$ptTitle) 
+                                , FUN=sum #how to aggregate (summation)
+                                )
+      #rename x back to TradeValue
+        #https://www.datanovia.com/en/lessons/rename-data-frame-columns-in-r/
+        names(aggregate1)[names(aggregate1) == "x"] <- "TradeValue"
+        
   #graph subset
       # Makes graphs look nicer.
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-    ggplot(subsets1, mapping = aes(x = period, y = TradeValue, group=ptTitle)) + #group specifies which data should be drawn as a single line
+    ggplot(aggregate1, mapping = aes(x = period, y = TradeValue, group=ptTitle)) + #group specifies which data should be drawn as a single line
       #adds lines and legend
         geom_line(aes(linetype=ptTitle))+
         #geom_lineadds the lines to the graph.
@@ -151,4 +191,6 @@ library(ggplot2)
              ,x="time"
              ,y="Trade Value (USD)"
                ) 
+    
+    #Do I need to deseasonalize monthly data? Probably not worth the trouble
 
