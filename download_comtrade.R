@@ -82,7 +82,7 @@ country_list = "124,842,410,702,490"
 #Define period list
 #I don't think a single download can can have more than 12 months of data
 #website: https://comtrade.un.org/data/
-period_list=c("2017","2019")
+period_list=c("2017","2018","2019")
 #for some reason, 2018 data won't download.
 
 #Run download loop
