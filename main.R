@@ -11,7 +11,9 @@
   source("download_comtrade.R")
   
 #Download non comtrade data
-  #statistica
+  #CEPII Data
+    #already download
+    #Source: http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=35
 
 
 
