@@ -89,35 +89,37 @@
       hs_codes="8541,8542,848071,8486,854370,854390,903082,903141"
     #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
 
-  #Run download loop
-    if(download_data==1){
-    #Create list that will house each data download
-      list_data_comtrade = list() #https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop/29419402
-    #for loop that will download each year. I believe the API will only let me download 12 periods at most
-          for (ps in period_list){
+      #Run download loop
+      if(download_data==1){
+        #Create list that will house each data download
+        list_data_comtrade = list() #https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop/29419402
+        #for loop that will download each year. I believe the API will only let me download 12 periods at most
+        for (ps in period_list){
           #download data call
-            data_comtrade_ps <- get.Comtrade(r = country_list
-                                      ,p = country_list
-                                      ,freq ="M"
-                                      ,ps = ps
-                                      ,cc=hs_codes
-                                      )
+          data_comtrade_ps <- get.Comtrade(r = country_list
+                                           ,p = country_list
+                                           ,freq ="M"
+                                           ,ps = ps
+                                           ,cc=hs_codes
+          )
           #save downloaded data to the list
-            list_data_comtrade[[ps]] <- data_comtrade_ps$data
-        
+          list_data_comtrade[[ps]] <- data_comtrade_ps$data
+          
           #Add a pause before downloading again
-            #I think this is necessary to prevent the WB system from rejecting the requests as too frequent
-            #How to pause: https://stackoverflow.com/questions/34859558/set-a-delay-between-two-instructions-in-r
-            Sys.sleep(3) 
+          #I think this is necessary to prevent the WB system from rejecting the requests as too frequent
+          #How to pause: https://stackoverflow.com/questions/34859558/set-a-delay-between-two-instructions-in-r
+          Sys.sleep(3) 
         }
-    
-      #Combine all the downloaded data into a single data frame
+        
+        #Combine all the downloaded data into a single data frame
         data_comtrade = do.call(rbind, list_data_comtrade)
-      
-      #save COMTRADE data to file
-        #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
-        save(data_comtrade,file="data/data_comtrade.Rda") 
-    }
+        
+        #save COMTRADE data to file
+          #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
+          #using "saveRDS" instead of "save" because "save" saves *all* objects and with their current names.
+          #so when they are loaded, it overwrites everything and makes a huge mess
+          saveRDS(data_comtrade,file="data/data_comtrade.Rda") 
+      }
 
 #Download non comtrade data
   #statistica
@@ -126,7 +128,7 @@
 
 #load data
     #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
-    data_comtrade2 <- load(file="data/data_comtrade.Rda")
+    data_comtrade <- readRDS(file="data/data_comtrade.Rda")
   
 #Manipulate data sets
   #Combine data
