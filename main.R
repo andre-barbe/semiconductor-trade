@@ -65,7 +65,7 @@
   #for some reason, 2018 data won't download.
 
 #define frequency
-    UN_COMTRADE_freq="M"
+    UN_COMTRADE_freq="A"
   
 #Comtrade data
   #Define scripts to download data
@@ -134,7 +134,7 @@ library(ggplot2)
     #only look at certain variables (imports) and for certain countries and HS codes
       #example of how to both do bar chart and how to subset a dataframe is from
       #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      subsets1 <- subset(data_comtrade, (rgCode %in% c("Export","Exports") & hs_group %in% c("SME")))
+      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Export","Exports") & hs_group %in% c("SME")))
         #NTS: annual data calls it export (no -S)
         #NTS: monthly data calls it exports (yes -S)
     #aggregate certain HS codes to form product groups
@@ -173,7 +173,7 @@ library(ggplot2)
     #subset CEPII data to only look at those related to semiconductors
     data_trade_elasticity_subset <- subset(data_trade_elasticity
                                            , startsWith(data_trade_elasticity$HS6,
-                                              #based on answer here but changed grepl to startswith
+                                              #based on answer here but changed grepl to starts with
                                               #https://stackoverflow.com/questions/5823503/pattern-matching-using-a-wildcard
                                               #Startswith documentation: https://www.rdocumentation.org/packages/gdata/versions/2.18.0/topics/startsWith
                                               hs_codes_r4))
