@@ -1,5 +1,9 @@
 # Define script to download comtrade data
+#Examples from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
 # from https://comtrade.un.org/Data/Doc/api/ex/r
+
+library("rjson") #for loop download which saves to a file
+
 get.Comtrade.single <- function(url="http://comtrade.un.org/api/get?"
                          ,maxrec=50000
                          ,type="C"
@@ -53,40 +57,6 @@ get.Comtrade.single <- function(url="http://comtrade.un.org/api/get?"
   }
 }
 
-#define hscodes of interest
-
-#define countries of interest (all?)
-#reporters
-#partners
-#https://wits.worldbank.org/wits/wits/witshelp/content/codes/country_codes.htm
-
-
-#Download comtrade data
-library("rjson")
-#Examples from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
-
-#Define what to download for COMTRADE
-country_list = "124,842,410,702,490"
-#Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
-#I think this can only run with 5 countries max. When I did 6 countries, I got an error
-#484 Mexico
-#124 Canada
-#156 China
-#842 USA
-#410 South Korea
-#490 Other Asia (Taiwan)
-#Taiwan is not listed separately, it is part of "other asia NES"
-#https://unstats.un.org/unsd/tradekb/Knowledgebase/50104/Taiwan-Province-of-China-Trade-data
-#702 Singapore  
-
-#Define period list
-#I don't think a single download can can have more than 12 months of data
-#website: https://comtrade.un.org/data/
-period_list=c("2017","2018","2019")
-#for some reason, 2018 data won't download.
-
-save_location="data/data_comtrade.Rda"
-
 #Run download loop
   get.Comtrade.loop <- function( country_list,
                                  freq = "M",
@@ -125,11 +95,5 @@ save_location="data/data_comtrade.Rda"
     saveRDS(data_comtrade,file=save_location) 
   }
   
-if(download_data==1){
-  get.Comtrade.loop(country_list = country_list
-                    , ps = ps
-                    ,hs_codes = hs_codes
-                    ,save_location=save_location
-                    )
-}    
+
   

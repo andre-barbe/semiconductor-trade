@@ -30,13 +30,63 @@
     #define a version readable by the UNCOMTRADE API
     #https://stackoverflow.com/questions/2098368/concatenate-a-vector-of-strings-character
     #You want to use only collapse, not also sep, otherwise you get weird results
+
+#define countries of interest (all?)
+  #reporters
+  #partners
+  #https://wits.worldbank.org/wits/wits/witshelp/content/codes/country_codes.htm
+  
+  #Define what to download for COMTRADE
+    #I think this can only run with 5 countries max. When I did 6 countries, I got an error
+    country_list1 = "842,156,392,410,528" #USA China Japan South Korea Netherlands
+    country_list2 = "490,702, 276" #Taiwan Singapore Germany
+    #Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
+      #484 Mexico
+      #124 Canada
+      #156 China
+      #842 USA
+      #410 South Korea
+      #392 Japan
+      #528 Netherlands
+      #490 Other Asia (Taiwan)
+      #276 Germany
+      #Taiwan is not listed separately, it is part of "other asia NES"
+      #https://unstats.un.org/unsd/tradekb/Knowledgebase/50104/Taiwan-Province-of-China-Trade-data
+      #702 Singapore  
+    #Accoridng to wikipedia, this covers more or less all the major semiconductor countries
+      #Source https://en.wikipedia.org/wiki/Semiconductor_industry#Regions
+  
+#Define years of interest list
+  #For UNC COMTrade
+    #I don't think a single download can can have more than 12 months of data
+    #website: https://comtrade.un.org/data/
+    period_list=c("2017","2018","2019")
+  #for some reason, 2018 data won't download.
   
 #Comtrade data
-  #Download Comtrade Data
+  #Define scripts to download data
     source("download_comtrade.R")
+  #Download Comtrade Data
+    if(download_data==1){
+      get.Comtrade.loop(country_list = country_list1
+                        ,ps = ps
+                        ,hs_codes = hs_codes
+                        ,save_location="data/data_comtrade1.Rda"
+      )
+                        
+      get.Comtrade.loop(country_list = country_list2
+                        , ps = ps
+                        ,hs_codes = hs_codes
+                        ,save_location="data/data_comtrade2.Rda"
+      )
+      
+    }    
   #load Data
     #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
-    data_comtrade <- readRDS(file="data/data_comtrade.Rda")
+    data_comtrade1 <- readRDS(file="data/data_comtrade1.Rda")
+    data_comtrade2 <- readRDS(file="data/data_comtrade2.Rda")
+    data_comtrade = rbind(data_comtrade1,data_comtrade2)
+    
   #Clean data
     #convert Trade values from strings to numerics
       data_comtrade$TradeValue <- as.numeric(data_comtrade$TradeValue)
@@ -68,7 +118,7 @@ library(ggplot2)
     #only look at certain variables (imports) and for certain countries and HS codes
       #example of how to both do bar chart and how to subset a dataframe is from
       #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & hs_group %in% c("SME")))
+      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Exports") & hs_group %in% c("SME")))
     #aggregate certain HS codes to form product groups
       #aggregate TradeValue by group
         #https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
@@ -97,7 +147,7 @@ library(ggplot2)
         geom_point()+ 
       #Label title and axis
         #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
-        labs(title="US imports"
+        labs(title="Graph"
              ,x="time"
              ,y="Trade Value (USD)"
                ) 
