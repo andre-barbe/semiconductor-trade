@@ -58,7 +58,8 @@ get.Comtrade.single <- function(url="http://comtrade.un.org/api/get?"
 }
 
 #Run download loop
-  get.Comtrade.loop <- function( country_list,
+  get.Comtrade.loop <- function( list_reporter,
+                                 list_partner,
                                  freq = "M",
                                  ps = ps,
                                  hs_codes=hs_codes,
@@ -70,8 +71,8 @@ get.Comtrade.single <- function(url="http://comtrade.un.org/api/get?"
     #for loop that will download each year. I believe the API will only let me download 12 periods at most
     for (ps in period_list){
       #download data call
-      data_comtrade_ps <- get.Comtrade.single(r = country_list
-                                       ,p = country_list
+      data_comtrade_ps <- get.Comtrade.single(r = list_reporter
+                                       ,p = list_partner
                                        ,freq = freq
                                        ,ps = ps
                                        ,cc=hs_codes

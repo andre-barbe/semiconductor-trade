@@ -68,13 +68,15 @@
     source("download_comtrade.R")
   #Download Comtrade Data
     if(download_data==1){
-      get.Comtrade.loop(country_list = country_list1
+      get.Comtrade.loop(list_reporter = country_list1
+                        ,list_partner = "0"
                         ,ps = ps
                         ,hs_codes = hs_codes
                         ,save_location="data/data_comtrade1.Rda"
       )
                         
-      get.Comtrade.loop(country_list = country_list2
+      get.Comtrade.loop(list_reporter = country_list2
+                        ,list_partner = "0"
                         , ps = ps
                         ,hs_codes = hs_codes
                         ,save_location="data/data_comtrade2.Rda"
@@ -127,7 +129,7 @@ library(ggplot2)
                                   #aggregate all entries with the same time period and partner country title
                                   #the name before the "=" tells what the new variable names are
                                   ,by=list(period=subsets1$period 
-                                           ,ptTitle=subsets1$ptTitle) 
+                                           ,rtTitle=subsets1$rtTitle) 
                                 , FUN=sum #how to aggregate (summation)
                                 )
       #rename x back to TradeValue
@@ -137,9 +139,9 @@ library(ggplot2)
   #graph subset
       # Makes graphs look nicer.
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-    ggplot(aggregate1, mapping = aes(x = period, y = TradeValue, group=ptTitle)) + #group specifies which data should be drawn as a single line
+    ggplot(aggregate1, mapping = aes(x = period, y = TradeValue, group=rtTitle)) + #group specifies which data should be drawn as a single line
       #adds lines and legend
-        geom_line(aes(linetype=ptTitle))+
+        geom_line(aes(linetype=rtTitle))+
         #geom_lineadds the lines to the graph.
         #linetype specification adds teh legend
       #add big points (scatterplot)
