@@ -164,14 +164,15 @@ library(ggplot2)
   
   #Create table on trade data elascitiies
     #subset CEPII data to only look at those related to semiconductors
+    data_trade_elasticity$filter <- startsWith(data_trade_elasticity$HS6,
+                         #based on answer here but changed grepl to starts with
+                         #https://stackoverflow.com/questions/5823503/pattern-matching-using-a-wildcard
+                         #Startswith documentation: https://www.rdocumentation.org/packages/gdata/versions/2.18.0/topics/startsWith
+                         hs_codes_r4)
+  #hs_codes_r4 is the first 4 digit of the semi-related HS codes.
+  #I do this because some of the semi codes are 6 digit, but only their 4 digit parent (or sibling) is in the CEPII data
     data_trade_elasticity_subset <- subset(data_trade_elasticity
-                                           , startsWith(data_trade_elasticity$HS6,
-                                              #based on answer here but changed grepl to starts with
-                                              #https://stackoverflow.com/questions/5823503/pattern-matching-using-a-wildcard
-                                              #Startswith documentation: https://www.rdocumentation.org/packages/gdata/versions/2.18.0/topics/startsWith
-                                              hs_codes_r4))
-                                                #hs_codes_r4 is the first 4 digit of the semi-related HS codes.
-                                                #I do this because some of the semi codes are 6 digit, but only their 4 digit parent (or sibling) is in the CEPII data
+                                           , data_trade_elasticity$filter)
 
     #Create row with average trade elasticity of all( not just trade related) CEPII HSes
       mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE))
