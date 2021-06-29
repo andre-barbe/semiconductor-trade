@@ -130,31 +130,38 @@
 #graphs
 library(ggplot2)
 
-  #subset data
-    #only look at certain variables (imports) and for certain countries and HS codes
+#create loop that creates graph for each HS code
+    for (i in 1:length(hs_codes_r)) {
+      filterto_cmdCode <- hs_codes_r[[i]]
+      #filter data to that HS code
       #example of how to both do bar chart and how to subset a dataframe is from
-      #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Export","Exports") & cmdCode %in% c(281111)))
-        #NTS: annual data calls it export (no -S)
-        #NTS: monthly data calls it exports (yes -S)
-   
-  #graph subset
-      # Makes graphs look nicer.
+        #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+        subsets1 <- subset(data_comtrade, (rgDesc %in% c("Export","Exports") & cmdCode %in% c(filterto_cmdCode)))
+      #NTS: annual data calls it export (no -S)
+      #NTS: monthly data calls it exports (yes -S)
+      
+      #graph subset
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-    ggplot(subsets1, mapping = aes(x = period, y = TradeValue, group=rtTitle)) + #group specifies which data should be drawn as a single line
-      #adds lines and legend
-        geom_line(aes(linetype=rtTitle))+
+      print(
+        #ggplot won't show up if inside loop without this option
+          #https://stackoverflow.com/questions/15678261/ggplot-does-not-work-if-it-is-inside-a-for-loop-although-it-works-outside-of-it
+        ggplot(subsets1, mapping = aes(x = period, y = TradeValue, group=rtTitle)) + #group specifies which data should be drawn as a single line
+        #adds lines and legend
+          geom_line(aes(linetype=rtTitle))+
         #geom_lineadds the lines to the graph.
         #linetype specification adds teh legend
-      #add big points (scatterplot)
-        #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
-        geom_point()+ 
-      #Label title and axis
-        #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
-        labs(title="Graph"
+        #add big points (scatterplot)
+          #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
+          geom_point()+ 
+        #Label title and axis
+          #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
+          labs(title=filterto_cmdCode
              ,x="time"
              ,y="Trade Value (USD)"
-               ) 
+        )
+      )
+    }
+  
   #Create table on trade data elascitiies
     #subset CEPII data to only look at those related to semiconductors
     data_trade_elasticity_subset <- subset(data_trade_elasticity
