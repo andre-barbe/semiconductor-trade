@@ -39,7 +39,8 @@
   #Define what to download for COMTRADE
     #I think this can only run with 5 countries max. When I did 6 countries, I got an error
     country_list1 = "842,156,392,410,528" #USA China Japan South Korea Netherlands
-    country_list2 = "490,702, 276" #Taiwan Singapore Germany
+    country_list2 = "490,702,276" #Taiwan Singapore Germany
+    #country_list2 = "528" #Taiwan Singapore Germany
     #Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
       #484 Mexico
       #124 Canada
@@ -62,6 +63,9 @@
     #website: https://comtrade.un.org/data/
     period_list=c("2017","2018","2019")
   #for some reason, 2018 data won't download.
+
+#define frequency
+    UN_COMTRADE_freq="M"
   
 #Comtrade data
   #Define scripts to download data
@@ -72,6 +76,7 @@
                         ,list_partner = "0"
                         ,ps = ps
                         ,hs_codes = hs_codes
+                        ,freq = UN_COMTRADE_freq
                         ,save_location="data/data_comtrade1.Rda"
       )
                         
@@ -79,6 +84,7 @@
                         ,list_partner = "0"
                         , ps = ps
                         ,hs_codes = hs_codes
+                        ,freq = UN_COMTRADE_freq
                         ,save_location="data/data_comtrade2.Rda"
       )
       
@@ -94,7 +100,15 @@
       data_comtrade$TradeValue <- as.numeric(data_comtrade$TradeValue)
     #convert periods to dates
       #see example in https://stackoverflow.com/questions/41327852/convert-a-yyyymm-format-to-date-in-r
-      data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),01), format = "%Y%m%d")
+      if(UN_COMTRADE_freq=="M"){
+        data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),01), format = "%Y%m%d")
+          #the paste0 adds a day value
+      }
+      if(UN_COMTRADE_freq=="A"){
+        data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),0101), format = "%Y%m%d")
+          #the paste0 adds a month and a day value
+      }
+      
   #Define semiconductor related subgroups
       #for example, SME vs SM inputs vs SM (themselves)
       data_comtrade$hs_group=""
@@ -120,7 +134,9 @@ library(ggplot2)
     #only look at certain variables (imports) and for certain countries and HS codes
       #example of how to both do bar chart and how to subset a dataframe is from
       #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Exports") & hs_group %in% c("SME")))
+      subsets1 <- subset(data_comtrade, (rgCode %in% c("Export","Exports") & hs_group %in% c("SME")))
+        #NTS: annual data calls it export (no -S)
+        #NTS: monthly data calls it exports (yes -S)
     #aggregate certain HS codes to form product groups
       #aggregate TradeValue by group
         #https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
@@ -130,7 +146,7 @@ library(ggplot2)
                                   #the name before the "=" tells what the new variable names are
                                   ,by=list(period=subsets1$period 
                                            ,rtTitle=subsets1$rtTitle) 
-                                , FUN=sum #how to aggregate (summation)
+                                , FUN=sum #how to aggregate (summation
                                 )
       #rename x back to TradeValue
         #https://www.datanovia.com/en/lessons/rename-data-frame-columns-in-r/

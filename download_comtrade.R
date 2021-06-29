@@ -60,9 +60,9 @@ get.Comtrade.single <- function(url="http://comtrade.un.org/api/get?"
 #Run download loop
   get.Comtrade.loop <- function( list_reporter,
                                  list_partner,
-                                 freq = "M",
                                  ps = ps,
                                  hs_codes=hs_codes,
+                                 freq,
                                  save_location
   )
   {
