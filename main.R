@@ -134,28 +134,14 @@ library(ggplot2)
     #only look at certain variables (imports) and for certain countries and HS codes
       #example of how to both do bar chart and how to subset a dataframe is from
       #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Export","Exports") & hs_group %in% c("SME")))
+      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Export","Exports") & cmdCode %in% c(281111)))
         #NTS: annual data calls it export (no -S)
         #NTS: monthly data calls it exports (yes -S)
-    #aggregate certain HS codes to form product groups
-      #aggregate TradeValue by group
-        #https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
-        aggregate1 <- aggregate(x = subsets1$TradeValue #I can't keep the variable name so I have to rename x to TradeValue later
-                                #aggregattion grouping
-                                  #aggregate all entries with the same time period and partner country title
-                                  #the name before the "=" tells what the new variable names are
-                                  ,by=list(period=subsets1$period 
-                                           ,rtTitle=subsets1$rtTitle) 
-                                , FUN=sum #how to aggregate (summation
-                                )
-      #rename x back to TradeValue
-        #https://www.datanovia.com/en/lessons/rename-data-frame-columns-in-r/
-        names(aggregate1)[names(aggregate1) == "x"] <- "TradeValue"
-        
+   
   #graph subset
       # Makes graphs look nicer.
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-    ggplot(aggregate1, mapping = aes(x = period, y = TradeValue, group=rtTitle)) + #group specifies which data should be drawn as a single line
+    ggplot(subsets1, mapping = aes(x = period, y = TradeValue, group=rtTitle)) + #group specifies which data should be drawn as a single line
       #adds lines and legend
         geom_line(aes(linetype=rtTitle))+
         #geom_lineadds the lines to the graph.
