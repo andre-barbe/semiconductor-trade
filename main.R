@@ -175,7 +175,7 @@ library(ggplot2)
                                            , data_trade_elasticity$filter)
 
     #Create row with average trade elasticity of all( not just trade related) CEPII HSes
-      mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE))
+      mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE),TRUE)
       #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/mean
       #na.rum =TRUE means it deletes NAs (otherwise it just gives NA for the mean)
       names(mean_data) <- names(data_trade_elasticity_subset)
