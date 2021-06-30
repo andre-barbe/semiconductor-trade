@@ -5,7 +5,7 @@
   rm(list=ls())
 
 #Program options
-  download_data <- 1
+  download_data <- 0
 
 #Define semiconductor related HS codes
   #Reference 1: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
@@ -101,12 +101,14 @@
     #convert periods to dates
       #see example in https://stackoverflow.com/questions/41327852/convert-a-yyyymm-format-to-date-in-r
       if(UN_COMTRADE_freq=="M"){
-        data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),01), format = "%Y%m%d")
+        data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),"01"), format = "%Y%m%d")
           #the paste0 adds a day value
+          #need the quotes around 01 otherwise leading zeroes are deleted
       }
       if(UN_COMTRADE_freq=="A"){
-        data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),0101), format = "%Y%m%d")
+        data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),"0101"), format = "%Y%m%d")
           #the paste0 adds a month and a day value
+          #need the quotes around 0101 otherwise leading zeroes are deleted
       }
       
   #Define semiconductor related subgroups
