@@ -5,14 +5,14 @@
   rm(list=ls())
 
 #Program options
-  download_data <- 0
+  download_data <- 1
 
 #Define semiconductor related HS codes
   #Reference 1: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
     #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
   #semiconductors themselves
     #8541 and 8542 are semiconductors
-    list_hs_semi=c("8541","8542")
+    #list_hs_semi=c("8541","8542")
   #SME
     #Source: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
     list_hs_SME=c("848071","8486","854370","854390","903082","903141")
@@ -20,7 +20,7 @@
     #https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
     list_hs_chemicals=c("281111","370790","391190","392099")
   #define an r readable version of the hs codes
-    hs_codes_r=c(list_hs_semi,list_hs_SME,list_hs_chemicals)
+    hs_codes_r=c(list_hs_SME,list_hs_chemicals)
     #how to combine lists: https://stackoverflow.com/questions/36665492/how-to-combine-two-lists-in-r
   hs_codes_r4=substr(hs_codes_r,1,4)
     #define a HS4 equivalent, for use in the CEPII data
@@ -61,7 +61,7 @@
   #For UNC COMTrade
     #I don't think a single download can can have more than 12 months of data
     #website: https://comtrade.un.org/data/
-    period_list=c("2017","2018","2019")
+    period_list=c("2016","2017","2018","2019","2020")
   #for some reason, 2018 data won't download.
 
 #define frequency
@@ -112,7 +112,6 @@
   #Define semiconductor related subgroups
       #for example, SME vs SM inputs vs SM (themselves)
       data_comtrade$hs_group=""
-      data_comtrade$hs_group[data_comtrade$cmdCode %in% list_hs_semi]="semiconductors"
       data_comtrade$hs_group[data_comtrade$cmdCode %in% list_hs_SME]="SME"
       data_comtrade$hs_group[data_comtrade$cmdCode %in% list_hs_chemicals]="semi chemicals"
   
