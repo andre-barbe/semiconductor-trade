@@ -5,7 +5,7 @@
   rm(list=ls())
 
 #Program options
-  download_data <- 1
+  download_data <- 0
 
 #Define semiconductor related HS codes
   #Reference 1: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
@@ -164,15 +164,11 @@ library(ggplot2)
   
   #Create table on trade data elascitiies
     #subset CEPII data to only look at those related to semiconductors
-    data_trade_elasticity$filter <- startsWith(data_trade_elasticity$HS6,
-                         #based on answer here but changed grepl to starts with
-                         #https://stackoverflow.com/questions/5823503/pattern-matching-using-a-wildcard
-                         #Startswith documentation: https://www.rdocumentation.org/packages/gdata/versions/2.18.0/topics/startsWith
-                         hs_codes_r4)
-  #hs_codes_r4 is the first 4 digit of the semi-related HS codes.
-  #I do this because some of the semi codes are 6 digit, but only their 4 digit parent (or sibling) is in the CEPII data
-    data_trade_elasticity_subset <- subset(data_trade_elasticity
-                                           , data_trade_elasticity$filter)
+        data_trade_elasticity$filter <- substr(data_trade_elasticity$HS6,1,4) %in% hs_codes_r4
+        #hs_codes_r4 is the first 4 digit of the semi-related HS codes.
+        #I do this because some of the semi codes are 6 digit, but only their 4 digit parent (or sibling) is in the CEPII data
+          data_trade_elasticity_subset <- subset(data_trade_elasticity
+                                                 , data_trade_elasticity$filter)
 
     #Create row with average trade elasticity of all( not just trade related) CEPII HSes
       mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE),TRUE)
@@ -182,6 +178,8 @@ library(ggplot2)
         #this is necessary so that the new row binds with the existing datframe
     #Merge the mean row with the existing dataframe
       data_trade_elasticity_subset <- rbind(data_trade_elasticity_subset,mean_data)
+    #Round to nearest whole number for ease of reading
+      data_trade_elasticity_subset$sigma = round(data_trade_elasticity_subset$sigma,0)
       data_trade_elasticity_subset
     
 
