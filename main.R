@@ -125,11 +125,21 @@ library("ggrepel")
               #sort by trade value, descending
             top_X_countries <- top_countries$rtTitle[1:4]
       #delete data not from top countries
-          subsets1 <- subset(subsets1, (rtTitle %in% top_X_countries))
+          #subsets1 <- subset(subsets1, (rtTitle %in% top_X_countries))
+      #collapse data not from top 4 countries
+        #if not in top 4, change name to "rest of world"
+          subsets1$rtTitle[!(subsets1$rtTitle %in% top_X_countries)] <- "Rest of world"
+        #Delete all columns except for the ones I am using
+          subsets2 <- subsets1[,names(subsets1) %in% c("cmdCode","period","rtTitle","TradeValue")]
+        #aggregate the data together, summing over trade values, for groups of period/title pairs
+          subsets2 <- aggregate(subsets2$TradeValue, by = list(subsets2$period,subsets2$rtTitle), FUN = sum, na.rm=TRUE)
+          #Reference: https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
+        names(subsets2)=c("period","rtTitle","TradeValue")
+          #For some reason, aggregating destroys all the column names so I have to put them back
           
       #add labels next to line
         #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
-      data_label <- subsets1
+      data_label <- subsets2
       data_label$label <-NA
       data_label$label[which(data_label$period == max(data_label$period))] <- data_label$rtTitle[which(data_label$period == max(data_label$period))]
       
@@ -155,8 +165,14 @@ library("ggrepel")
         )+
         geom_label_repel(aes(label = label),
                          nudge_x = 1,
-                         na.rm = TRUE) +
-          theme(legend.position = "none")
+                         na.rm = TRUE)
+          #adds the line labels next to the lines
+        +theme(legend.position = "none")
+            #removes the legend
+        +ylim(0, max(data_label$TradeValue))
+          #https://ggplot2.tidyverse.org/reference/lims.html
+          #sets y axis values to range from 0 to whatever the max is
+          #without this option, the min y value is set at whatever the min of the data is, not 0
       )
     }
 
