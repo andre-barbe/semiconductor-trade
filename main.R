@@ -4,8 +4,6 @@
   #Source: https://www.geeksforgeeks.org/clear-the-console-and-the-environment-in-r-studio/
   rm(list=ls())
 
-#Program options
-  download_data <- 1
 
 #Define semiconductor related HS codes
   #Reference 1: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
@@ -32,39 +30,15 @@
     #You want to use only collapse, not also sep, otherwise you get weird results
 
 #define countries of interest (all?)
-  #reporters
-  #partners
   #https://wits.worldbank.org/wits/wits/witshelp/content/codes/country_codes.htm
-  
-  #Define what to download for COMTRADE
-    #I think this can only run with 5 countries max. When I did 6 countries, I got an error
-    #country_list1 = "842,156,392,410,528" #USA China Japan South Korea Netherlands
-    #country_list2 = "490,702,276" #Taiwan Singapore Germany
-    #country_list2 = "528" #Taiwan Singapore Germany
-    #Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
-      #484 Mexico
-      #124 Canada
-      #156 China
-      #842 USA
-      #410 South Korea
-      #392 Japan
-      #528 Netherlands
-      #490 Other Asia (Taiwan)
-      #276 Germany
-      #Taiwan is not listed separately, it is part of "other asia NES"
-      #https://unstats.un.org/unsd/tradekb/Knowledgebase/50104/Taiwan-Province-of-China-Trade-data
-      #702 Singapore  
-    #Accoridng to wikipedia, this covers more or less all the major semiconductor countries
-      #Source https://en.wikipedia.org/wiki/Semiconductor_industry#Regions
-    #Note: It would be nice to run the data pull and ask for "all" reporters. However, that is not possible for any given year, since some reporters are missing
-      #disaggregated data for more recent years. For example, I can do 2016 with these HS codes, but not 2020
-  
+    #Taiwan is not listed separately, it is part of "other asia NES"
+    #https://unstats.un.org/unsd/tradekb/Knowledgebase/50104/Taiwan-Province-of-China-Trade-data
+ 
 #Define years of interest list
   #For UNC COMTrade
     #I don't think a single download can can have more than 12 months of data
     #website: https://comtrade.un.org/data/
     period_list=c("2016","2017","2018","2019","2020")
-  #for some reason, 2018 data won't download.
 
 #define frequency
     UN_COMTRADE_freq="A"
@@ -73,6 +47,7 @@
   #Define scripts to download data
     source("download_comtrade.R")
   #Download Comtrade Data
+      #Do two calls as there is a max download limit per call
       data_comtrade_raw_1 <- get.Comtrade.single(r = "all"
                                               ,p = "0"
                                               ,freq = UN_COMTRADE_freq
@@ -82,21 +57,22 @@
       )
       
       Sys.sleep(3) 
+        #wait between downloads as otherwise the UN system cancels the second download
       
       data_comtrade_raw_2 <- get.Comtrade.single(r = "all"
-                                                    ,p = "0"
-                                                    ,freq = UN_COMTRADE_freq
-                                                    ,ps = "2016,2017"
-                                                    ,cc=hs_codes
-                                                    ,rg="2"
-      )
-   
-  #load Data
+                                                ,p = "0"
+                                                ,freq = UN_COMTRADE_freq
+                                                ,ps = "2016,2017"
+                                                ,cc=hs_codes
+                                                ,rg="2"
+  )
+    #Combine the two downloads into a single data set
+      data_comtrade=rbind(data_comtrade_raw_1$data,data_comtrade_raw_2$data)
+      
+  #Save Data
     #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
-    #data_comtrade1 <- readRDS(file="data/data_comtrade1.Rda")
-    #data_comtrade2 <- readRDS(file="data/data_comtrade2.Rda")
-    #data_comtrade = rbind(data_comtrade1,data_comtrade2)
-    data_comtrade=rbind(data_comtrade_raw_1$data,data_comtrade_raw_2$data)
+    saveRDS(data_comtrade,file="data/data_comtrade.Rda") 
+    
     
   #Clean data
     #convert Trade values from strings to numerics
@@ -114,12 +90,6 @@
           #need the quotes around 0101 otherwise leading zeroes are deleted
       }
       
-  #Define semiconductor related subgroups
-      #for example, SME vs SM inputs vs SM (themselves)
-      data_comtrade$hs_group=""
-      data_comtrade$hs_group[data_comtrade$cmdCode %in% list_hs_SME]="SME"
-      data_comtrade$hs_group[data_comtrade$cmdCode %in% list_hs_chemicals]="semi chemicals"
-  
 #CEPII Data
   #Description
     #"The trade elasticity is the reaction of bilateral import flows (in value) to a change in the applied import tariff for a given product (as defined by the WCO’s six-digit Harmonized System classification in revision 2007 - hereafter HS6)."
@@ -189,25 +159,25 @@ library("ggrepel")
           theme(legend.position = "none")
       )
     }
-  
-  #Create table on trade data elascitiies
-    #subset CEPII data to only look at those related to semiconductors
-        data_trade_elasticity$filter <- (substr(data_trade_elasticity$HS6,1,4) %in% hs_codes_r) | (substr(data_trade_elasticity$HS6,1,6) %in% hs_codes_r)
-          #hs_codes_r contain some codes that are 4 digit and some that are 6 digit
-          #an HS6 in the trade elascitiy data passes the filter if it its HS6 is an exact match for the HS6 in the code list, or its HS4 is an exact match for an HS4 in the code list
-        #keep trade data elasticities that match th filter
-          data_trade_elasticity_subset <- subset(data_trade_elasticity, data_trade_elasticity$filter)
 
-    #Create row with average trade elasticity of all( not just trade related) CEPII HSes
-      mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE),TRUE)
-      #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/mean
-      #na.rum =TRUE means it deletes NAs (otherwise it just gives NA for the mean)
-      names(mean_data) <- names(data_trade_elasticity_subset)
-        #this is necessary so that the new row binds with the existing datframe
-    #Merge the mean row with the existing dataframe
-      data_trade_elasticity_subset <- rbind(data_trade_elasticity_subset,mean_data)
-    #Round to nearest whole number for ease of reading
-      data_trade_elasticity_subset$sigma = round(data_trade_elasticity_subset$sigma,0)
-      data_trade_elasticity_subset
-    
+#Create table on trade data elascitiies
+  #subset CEPII data to only look at those related to semiconductors
+      data_trade_elasticity$filter <- (substr(data_trade_elasticity$HS6,1,4) %in% hs_codes_r) | (substr(data_trade_elasticity$HS6,1,6) %in% hs_codes_r)
+        #hs_codes_r contain some codes that are 4 digit and some that are 6 digit
+        #an HS6 in the trade elascitiy data passes the filter if it its HS6 is an exact match for the HS6 in the code list, or its HS4 is an exact match for an HS4 in the code list
+      #keep trade data elasticities that match th filter
+        data_trade_elasticity_subset <- subset(data_trade_elasticity, data_trade_elasticity$filter)
+
+  #Create row with average trade elasticity of all( not just trade related) CEPII HSes
+    mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE),TRUE)
+    #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/mean
+    #na.rum =TRUE means it deletes NAs (otherwise it just gives NA for the mean)
+    names(mean_data) <- names(data_trade_elasticity_subset)
+      #this is necessary so that the new row binds with the existing datframe
+  #Merge the mean row with the existing dataframe
+    data_trade_elasticity_subset <- rbind(data_trade_elasticity_subset,mean_data)
+  #Round to nearest whole number for ease of reading
+    data_trade_elasticity_subset$sigma = round(data_trade_elasticity_subset$sigma,0)
+    data_trade_elasticity_subset
+  
 
