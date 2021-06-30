@@ -163,11 +163,11 @@ library(ggplot2)
   
   #Create table on trade data elascitiies
     #subset CEPII data to only look at those related to semiconductors
-        data_trade_elasticity$filter <- substr(data_trade_elasticity$HS6,1,4) %in% hs_codes_r4
-        #hs_codes_r4 is the first 4 digit of the semi-related HS codes.
-        #I do this because some of the semi codes are 6 digit, but only their 4 digit parent (or sibling) is in the CEPII data
-          data_trade_elasticity_subset <- subset(data_trade_elasticity
-                                                 , data_trade_elasticity$filter)
+        data_trade_elasticity$filter <- (substr(data_trade_elasticity$HS6,1,4) %in% hs_codes_r) | (substr(data_trade_elasticity$HS6,1,6) %in% hs_codes_r)
+          #hs_codes_r contain some codes that are 4 digit and some that are 6 digit
+          #an HS6 in the trade elascitiy data passes the filter if it its HS6 is an exact match for the HS6 in the code list, or its HS4 is an exact match for an HS4 in the code list
+        #keep trade data elasticities that match th filter
+          data_trade_elasticity_subset <- subset(data_trade_elasticity, data_trade_elasticity$filter)
 
     #Create row with average trade elasticity of all( not just trade related) CEPII HSes
       mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE),TRUE)
