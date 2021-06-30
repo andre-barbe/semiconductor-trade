@@ -5,7 +5,7 @@
   rm(list=ls())
 
 #Program options
-  download_data <- 0
+  download_data <- 1
 
 #Define semiconductor related HS codes
   #Reference 1: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
@@ -38,8 +38,8 @@
   
   #Define what to download for COMTRADE
     #I think this can only run with 5 countries max. When I did 6 countries, I got an error
-    country_list1 = "842,156,392,410,528" #USA China Japan South Korea Netherlands
-    country_list2 = "490,702,276" #Taiwan Singapore Germany
+    #country_list1 = "842,156,392,410,528" #USA China Japan South Korea Netherlands
+    #country_list2 = "490,702,276" #Taiwan Singapore Germany
     #country_list2 = "528" #Taiwan Singapore Germany
     #Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
       #484 Mexico
@@ -73,29 +73,30 @@
   #Define scripts to download data
     source("download_comtrade.R")
   #Download Comtrade Data
-    if(download_data==1){
-      get.Comtrade.loop(list_reporter = country_list1
-                        ,list_partner = "0"
-                        ,ps = ps
-                        ,hs_codes = hs_codes
-                        ,freq = UN_COMTRADE_freq
-                        ,save_location="data/data_comtrade1.Rda"
-      )
-                        
-      get.Comtrade.loop(list_reporter = country_list2
-                        ,list_partner = "0"
-                        , ps = ps
-                        ,hs_codes = hs_codes
-                        ,freq = UN_COMTRADE_freq
-                        ,save_location="data/data_comtrade2.Rda"
+      data_comtrade_raw_1 <- get.Comtrade.single(r = "all"
+                                              ,p = "0"
+                                              ,freq = UN_COMTRADE_freq
+                                              ,ps = "2018,2019,2020"
+                                              ,cc=hs_codes
+                                              ,rg="2"
       )
       
-    }    
+      Sys.sleep(3) 
+      
+      data_comtrade_raw_2 <- get.Comtrade.single(r = "all"
+                                                    ,p = "0"
+                                                    ,freq = UN_COMTRADE_freq
+                                                    ,ps = "2016,2017"
+                                                    ,cc=hs_codes
+                                                    ,rg="2"
+      )
+   
   #load Data
     #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
-    data_comtrade1 <- readRDS(file="data/data_comtrade1.Rda")
-    data_comtrade2 <- readRDS(file="data/data_comtrade2.Rda")
-    data_comtrade = rbind(data_comtrade1,data_comtrade2)
+    #data_comtrade1 <- readRDS(file="data/data_comtrade1.Rda")
+    #data_comtrade2 <- readRDS(file="data/data_comtrade2.Rda")
+    #data_comtrade = rbind(data_comtrade1,data_comtrade2)
+    data_comtrade=rbind(data_comtrade_raw_1$data,data_comtrade_raw_2$data)
     
   #Clean data
     #convert Trade values from strings to numerics
