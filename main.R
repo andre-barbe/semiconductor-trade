@@ -56,6 +56,8 @@
       #702 Singapore  
     #Accoridng to wikipedia, this covers more or less all the major semiconductor countries
       #Source https://en.wikipedia.org/wiki/Semiconductor_industry#Regions
+    #Note: It would be nice to run the data pull and ask for "all" reporters. However, that is not possible for any given year, since some reporters are missing
+      #disaggregated data for more recent years. For example, I can do 2016 with these HS codes, but not 2020
   
 #Define years of interest list
   #For UNC COMTrade
@@ -138,12 +140,22 @@ library("ggrepel")
     for (i in 1:length(hs_codes_r)) {
       filterto_cmdCode <- hs_codes_r[[i]]
       #filter data to that HS code
-      #example of how to both do bar chart and how to subset a dataframe is from
-        #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+        #example of how to both do bar chart and how to subset a dataframe is from
+          #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+      #delete data not in filter
         subsets1 <- subset(data_comtrade, (rgDesc %in% c("Export","Exports") & cmdCode %in% c(filterto_cmdCode)))
-      #NTS: annual data calls it export (no -S)
-      #NTS: monthly data calls it exports (yes -S)
-      
+          #NTS: annual data calls it export (no -S)
+          #NTS: monthly data calls it exports (yes -S)
+        #Determine top exporting coutnries
+          #sort data
+            top_countries <- subsets1[subsets1$period == max(subsets1$period),]
+              #filter to most recent year only
+            top_countries <- top_countries[order(-top_countries$TradeValue),]
+              #sort by trade value, descending
+            top_5_countries <- top_countries$rtTitle[1:5]
+      #delete data not from top countries
+          subsets1 <- subset(subsets1, (rtTitle %in% top_5_countries))
+          
       #add labels next to line
         #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
       data_label <- subsets1
