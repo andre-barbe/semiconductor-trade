@@ -130,6 +130,9 @@
   
 #graphs
 library(ggplot2)
+library("ggrepel")    
+    #For adding labels next to the line
+      #reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
 
 #create loop that creates graph for each HS code
     for (i in 1:length(hs_codes_r)) {
@@ -141,12 +144,19 @@ library(ggplot2)
       #NTS: annual data calls it export (no -S)
       #NTS: monthly data calls it exports (yes -S)
       
+      #add labels next to line
+        #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
+      data_label <- subsets1
+      data_label$label <-NA
+      data_label$label[which(data_label$period == max(data_label$period))] <- data_label$rtTitle[which(data_label$period == max(data_label$period))]
+      
+        
       #graph subset
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
       print(
         #ggplot won't show up if inside loop without this option
           #https://stackoverflow.com/questions/15678261/ggplot-does-not-work-if-it-is-inside-a-for-loop-although-it-works-outside-of-it
-        ggplot(subsets1, mapping = aes(x = period, y = TradeValue, group=rtTitle)) + #group specifies which data should be drawn as a single line
+        ggplot(data_label, mapping = aes(x = period, y = TradeValue, group=rtTitle)) + #group specifies which data should be drawn as a single line
         #adds lines and legend
           geom_line(aes(linetype=rtTitle))+
         #geom_lineadds the lines to the graph.
@@ -159,7 +169,11 @@ library(ggplot2)
           labs(title=filterto_cmdCode
              ,x="time"
              ,y="Trade Value (USD)"
-        )
+        )+
+        geom_label_repel(aes(label = label),
+                         nudge_x = 1,
+                         na.rm = TRUE) +
+          theme(legend.position = "none")
       )
     }
   
