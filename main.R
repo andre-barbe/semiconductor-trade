@@ -152,9 +152,9 @@ library("ggrepel")
               #filter to most recent year only
             top_countries <- top_countries[order(-top_countries$TradeValue),]
               #sort by trade value, descending
-            top_5_countries <- top_countries$rtTitle[1:5]
+            top_X_countries <- top_countries$rtTitle[1:4]
       #delete data not from top countries
-          subsets1 <- subset(subsets1, (rtTitle %in% top_5_countries))
+          subsets1 <- subset(subsets1, (rtTitle %in% top_X_countries))
           
       #add labels next to line
         #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
