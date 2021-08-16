@@ -7,3 +7,8 @@ VLSI
 
 R Library Dependencies:
 gdata
+ggplot2
+ggrepel
+tidyr
+stringr
+dplyr
