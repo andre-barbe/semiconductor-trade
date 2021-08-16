@@ -69,11 +69,6 @@
     #Combine the two downloads into a single data set
       data_comtrade=rbind(data_comtrade_raw_1$data,data_comtrade_raw_2$data)
       
-  #Save Data
-    #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
-    saveRDS(data_comtrade,file="data/data_comtrade.Rda") 
-    
-    
   #Clean data
     #convert Trade values from strings to numerics
       data_comtrade$TradeValue <- as.numeric(data_comtrade$TradeValue)
@@ -89,6 +84,14 @@
           #the paste0 adds a month and a day value
           #need the quotes around 0101 otherwise leading zeroes are deleted
       }
+
+    #Save Data
+      saveRDS(data_comtrade,file="data/data_comtrade.Rda") 
+        #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
+      write.csv(data_comtrade,file="data/data_comtrade.csv")
+        #How to save CSV files https://sphweb.bumc.bu.edu/otlt/MPH-Modules/BS/R/R-Manual/R-Manual5.html
+      
+      
       
 #CEPII Data
   #Description
@@ -98,7 +101,7 @@
     #already download
     #Source: http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=35
   #Load Data
-    data_trade_elasticity <- read.csv(file="data/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
+    data_trade_elasticity <- read.csv(file="data/Manual Download/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
     #colClasses tells the readCSV that the HS6 is a character, not numeric. Otherwise it thinks it is numeric and deletes leading zeroes
   
 #graphs
