@@ -1,196 +1,141 @@
-#This file currently does everything for the project: downloading data, manipulating it, creating graphs (eventually)
+#This file does everything for the project: downloading data, manipulating it, creating graphs (or calls the files that do)
 
 #Clear variables
   #Source: https://www.geeksforgeeks.org/clear-the-console-and-the-environment-in-r-studio/
   rm(list=ls())
 
-#Program options
-  download_data <- 1
+#Manually download data
+  #CEPII Data comes from http://www.cepii.fr/cepii/en/bdd_modele/presentation.asp?id=35
+  #UN COmtrade data comes from
+    #/api/get?max=502&type=C&freq=A&px=HS&ps=2020%2C2019%2C2018%2C2017%2C2016&r=all&p=0&rg=all&cc=848620%2C903082%2C903141
+    #website: https://comtrade.un.org/data/
 
-# Define script to download comtrade data
-  # from https://comtrade.un.org/Data/Doc/api/ex/r
-  get.Comtrade <- function(url="http://comtrade.un.org/api/get?"
-                           ,maxrec=50000
-                           ,type="C"
-                           ,freq="A"
-                           ,px="HS"
-                           ,ps="now"
-                           ,r
-                           ,p
-                           ,rg="all"
-                           ,cc="TOTAL"
-                           ,fmt="json"
-  )
-  {
-    string<- paste(url
-                   ,"max=",maxrec,"&" #maximum no. of records returned
-                   ,"type=",type,"&" #type of trade (c=commodities)
-                   ,"freq=",freq,"&" #frequency
-                   ,"px=",px,"&" #classification
-                   ,"ps=",ps,"&" #time period.
-                   #Dont' need to list each time month. For example, according to https://comtrade.un.org/data/doc/api/#DataRequests if you are using monthly data, you can just type the years in
-                   ,"r=",r,"&" #reporting area
-                   ,"p=",p,"&" #partner country
-                   ,"rg=",rg,"&" #trade flow
-                   ,"cc=",cc,"&" #classification code
-                   ,"fmt=",fmt        #Format
-                   ,sep = ""
-    )
-    
-    if(fmt == "csv") {
-      raw.data<- read.csv(string,header=TRUE)
-      return(list(validation=NULL, data=raw.data))
-    } else {
-      if(fmt == "json" ) {
-        raw.data<- fromJSON(file=string)
-        data<- raw.data$dataset
-        validation<- unlist(raw.data$validation, recursive=TRUE)
-        ndata<- NULL
-        if(length(data)> 0) {
-          var.names<- names(data[[1]])
-          data<- as.data.frame(t( sapply(data,rbind)))
-          ndata<- NULL
-          for(i in 1:ncol(data)){
-            data[sapply(data[,i],is.null),i]<- NA
-            ndata<- cbind(ndata, unlist(data[,i]))
-          }
-          ndata<- as.data.frame(ndata)
-          colnames(ndata)<- var.names
-        }
-        return(list(validation=validation,data =ndata))
-      }
-    }
-  }
+#load comtrade data    
+    data_comtrade=read.csv2(sep=",",file="data/Manual Download/comtrade 2021-08-16.csv")
+    #How to save CSV files https://sphweb.bumc.bu.edu/otlt/MPH-Modules/BS/R/R-Manual/R-Manual5.html
+      
+  #Clean data
+        data_comtrade$date <- as.Date(paste0(as.character(data_comtrade$Period),"0101"), format = "%Y%m%d")
+          #the paste0 adds a month and a day value
+          #need the quotes around 0101 otherwise leading zeroes are deleted
 
-#define hscodes of interest
-
-#define countries of interest (all?)
-  #reporters
-  #partners
-  #https://wits.worldbank.org/wits/wits/witshelp/content/codes/country_codes.htm
+    #Rename variables
+        names(data_comtrade)[names(data_comtrade)=="Trade.Value..US.."]="TradeValue"
+      
+#Load CEPII Data
+  #Description
+    #"The trade elasticity is the reaction of bilateral import flows (in value) to a change in the applied import tariff for a given product (as defined by the WCO’s six-digit Harmonized System classification in revision 2007 - hereafter HS6)."
+    #Trade elasticities for semiconductors are very large in magnitude
+  #Download Data
+    #already download
+    #Source: http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=35
+  #Load Data
+    data_trade_elasticity <- read.csv(file="data/Manual Download/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
+    #colClasses tells the readCSV that the HS6 is a character, not numeric. Otherwise it thinks it is numeric and deletes leading zeroes
   
-  
-#Download comtrade data
-  library("rjson")
-  #Examples from https://comtrade.un.org/Data/Doc/api/ex/r which runs the get.Comtrade script
- 
-  #Define what to download for COMTRADE
-    country_list = "124,842,410,702,490"
-      #Country id numbers from: https://comtrade.un.org/db/mr/rfreporterslist.aspx
-      #I think this can only run with 5 countries max. When I did 6 countries, I got an error
-      #484 Mexico
-      #124 Canada
-      #156 China
-      #842 USA
-      #410 South Korea
-      #490 Other Asia (Taiwan)
-        #Taiwan is not listed separately, it is part of "other asia NES"
-        #https://unstats.un.org/unsd/tradekb/Knowledgebase/50104/Taiwan-Province-of-China-Trade-data
-      #702 Singapore  
-    
-    #Define period list
-      #I don't think a single download can can have more than 12 months of data
-      #website: https://comtrade.un.org/data/
-      period_list=c("2017","2019")
-      #for some reason, 2018 data won't download.
-    #hs code list
-      #28111111000 is Hydrogen Flouride which apparently is a chemical used in semiconductors
-      #8541 and 8542 are semiconductors
-      hs_codes="8541,8542,848071,8486,854370,854390,903082,903141"
-    #Reference: https://docs.google.com/document/d/1pbYg6z0LPQEcC5yolcURZpsSPQ5AkxFQ1Mdh-0C09Q8/edit
-
-      #Run download loop
-      if(download_data==1){
-        #Create list that will house each data download
-        list_data_comtrade = list() #https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop/29419402
-        #for loop that will download each year. I believe the API will only let me download 12 periods at most
-        for (ps in period_list){
-          #download data call
-          data_comtrade_ps <- get.Comtrade(r = country_list
-                                           ,p = country_list
-                                           ,freq ="M"
-                                           ,ps = ps
-                                           ,cc=hs_codes
-          )
-          #save downloaded data to the list
-          list_data_comtrade[[ps]] <- data_comtrade_ps$data
-          
-          #Add a pause before downloading again
-          #I think this is necessary to prevent the WB system from rejecting the requests as too frequent
-          #How to pause: https://stackoverflow.com/questions/34859558/set-a-delay-between-two-instructions-in-r
-          Sys.sleep(3) 
-        }
-        
-        #Combine all the downloaded data into a single data frame
-        data_comtrade = do.call(rbind, list_data_comtrade)
-        
-        #save COMTRADE data to file
-          #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
-          #using "saveRDS" instead of "save" because "save" saves *all* objects and with their current names.
-          #so when they are loaded, it overwrites everything and makes a huge mess
-          saveRDS(data_comtrade,file="data/data_comtrade.Rda") 
-      }
-
-#Download non comtrade data
-  #statistica
-
-
-
-#load data
-    #How to save and load a file: https://stackoverflow.com/questions/8345759/how-to-save-a-data-frame-in-r
-    data_comtrade <- readRDS(file="data/data_comtrade.Rda")
-  
-#Manipulate data sets
-    #convert Trade values from strings to numerics
-      data_comtrade$TradeValue <- as.numeric(data_comtrade$TradeValue)
-    #convert periods to dates
-      #see example in https://stackoverflow.com/questions/41327852/convert-a-yyyymm-format-to-date-in-r
-      data_comtrade$period <- as.Date(paste0(as.character(data_comtrade$period),01), format = "%Y%m%d")
-  #Define HS code aggregates
-    data_comtrade$hs_group=""
-    data_comtrade$hs_group[data_comtrade$cmdCode=="8541"]="semiconductors"
-    data_comtrade$hs_group[data_comtrade$cmdCode=="8542"]="semiconductors"
-  
-#graphs
+#graph Comtrade Data
 library(ggplot2)
+library("ggrepel")    
+    #For adding labels next to the line
+      #reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
 
-  #subset data
-    #only look at certain variables (imports) and for certain countries and HS codes
-      #example of how to both do bar chart and how to subset a dataframe is from
-      #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      subsets1 <- subset(data_comtrade, (rgDesc %in% c("Imports") & rtTitle %in% ("United States of America") & hs_group %in% c("semiconductors")))
-    #aggregate certain HS codes to form product groups
-      #aggregate TradeValue by group
-        #https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
-        aggregate1 <- aggregate(x = subsets1$TradeValue #I can't keep the variable name so I have to rename x to TradeValue later
-                                #aggregattion grouping
-                                  #aggregate all entries with the same time period and partner country title
-                                  #the name before the "=" tells what the new variable names are
-                                  ,by=list(period=subsets1$period 
-                                           ,ptTitle=subsets1$ptTitle) 
-                                , FUN=sum #how to aggregate (summation)
-                                )
-      #rename x back to TradeValue
-        #https://www.datanovia.com/en/lessons/rename-data-frame-columns-in-r/
-        names(aggregate1)[names(aggregate1) == "x"] <- "TradeValue"
+#create loop that creates graph for each HS code
+    hs_codes_r=c("848620","903082","903141")
+    for (i in 1:length(hs_codes_r)) {
+      filterto_Commodity.Code <- hs_codes_r[[i]]
+      #filter data to that HS code
+        #example of how to both do bar chart and how to subset a dataframe is from
+          #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+      #delete data not in filter
+        subsets1 <- subset(data_comtrade, (Trade.Flow %in% c("Export","Exports") & Commodity.Code %in% c(filterto_Commodity.Code)))
+          #NTS: annual data calls it export (no -S)
+          #NTS: monthly data calls it exports (yes -S)
+        #Determine top exporting coutnries
+          #sort data
+            top_countries <- subsets1[subsets1$date == max(subsets1$date),]
+              #filter to most recent year only
+            top_countries <- top_countries[order(-top_countries$TradeValue),]
+              #sort by trade value, descending
+            top_X_countries <- top_countries$Reporter[1:4]
+      #delete data not from top countries
+          #subsets1 <- subset(subsets1, (Reporter %in% top_X_countries))
+      #collapse data not from top 4 countries
+        #if not in top 4, change name to "rest of world"
+          subsets1$Reporter[!(subsets1$Reporter %in% top_X_countries)] <- "Rest of world"
+        #Delete all columns except for the ones I am using
+          subsets2 <- subsets1[,names(subsets1) %in% c("Commodity.Code","Period","Reporter","TradeValue")]
+        #aggregate the data together, summing over trade values, for groups of period/title pairs
+          subsets2 <- aggregate(subsets2$TradeValue, by = list(subsets2$Period,subsets2$Reporter), FUN = sum, na.rm=TRUE)
+          #Reference: https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
+        names(subsets2)=c("Period","Reporter","TradeValue")
+          #For some reason, aggregating destroys all the column names so I have to put them back
+          
+      #add labels next to line
+        #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
+      data_label <- subsets2
+      data_label$label <-NA
+      data_label$label[which(data_label$Period == max(data_label$Period))] <- data_label$Reporter[which(data_label$Period == max(data_label$Period))]
+      
         
-  #graph subset
-      # Makes graphs look nicer.
+      #graph subset
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-    ggplot(aggregate1, mapping = aes(x = period, y = TradeValue, group=ptTitle)) + #group specifies which data should be drawn as a single line
-      #adds lines and legend
-        geom_line(aes(linetype=ptTitle))+
+      print(
+        #ggplot won't show up if inside loop without this option
+          #https://stackoverflow.com/questions/15678261/ggplot-does-not-work-if-it-is-inside-a-for-loop-although-it-works-outside-of-it
+        ggplot(data_label, mapping = aes(x = Period, y = TradeValue, group=Reporter)) + #group specifies which data should be drawn as a single line
+        #adds lines and legend
+          geom_line(aes(linetype=Reporter))+
         #geom_lineadds the lines to the graph.
         #linetype specification adds teh legend
-      #add big points (scatterplot)
-        #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
-        geom_point()+ 
-      #Label title and axis
-        #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
-        labs(title="US imports"
+        #add big points (scatterplot)
+          #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
+          geom_point()+ 
+        #Label title and axis
+          #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
+          labs(title=filterto_Commodity.Code
              ,x="time"
              ,y="Trade Value (USD)"
-               ) 
-    
-    #Do I need to deseasonalize monthly data? Probably not worth the trouble
+        )+
+        geom_label_repel(aes(label = label),
+                         nudge_x = 1,
+                         na.rm = TRUE)
+          #adds the line labels next to the lines
+        +theme(legend.position = "none")
+            #removes the legend
+        +ylim(0, max(data_label$TradeValue))
+          #https://ggplot2.tidyverse.org/reference/lims.html
+          #sets y axis values to range from 0 to whatever the max is
+          #without this option, the min y value is set at whatever the min of the data is, not 0
+      )
+    }
 
+#Create table on CEPII trade data elascitiies
+  #subset CEPII data to only look at those related to semiconductors
+      data_trade_elasticity$filter <- (substr(data_trade_elasticity$HS6,1,4) %in% hs_codes_r) | (substr(data_trade_elasticity$HS6,1,6) %in% hs_codes_r)
+        #hs_codes_r contain some codes that are 4 digit and some that are 6 digit
+        #an HS6 in the trade elascitiy data passes the filter if it its HS6 is an exact match for the HS6 in the code list, or its HS4 is an exact match for an HS4 in the code list
+      #keep trade data elasticities that match th filter
+        data_trade_elasticity_subset <- subset(data_trade_elasticity, data_trade_elasticity$filter)
+
+  #Create row with average trade elasticity of all( not just trade related) CEPII HSes
+    mean_data <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE),TRUE)
+    #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/mean
+    #na.rum =TRUE means it deletes NAs (otherwise it just gives NA for the mean)
+    names(mean_data) <- names(data_trade_elasticity_subset)
+      #this is necessary so that the new row binds with the existing datframe
+  #Merge the mean row with the existing dataframe
+    data_trade_elasticity_subset <- rbind(data_trade_elasticity_subset,mean_data)
+  #Round to nearest whole number for ease of reading
+    data_trade_elasticity_subset$sigma = round(data_trade_elasticity_subset$sigma,0)
+    data_trade_elasticity_subset
+  
+#load VLSI Data
+    data_production=read.csv2(file="data/Manual Download/VLSI Production Data.csv",sep=",",header=T,skip=3)
+      #skip=3 to skip irrelevant rows as described in here https://stackoverflow.com/questions/23902421/designating-other-than-first-row-as-headers-in-r
+    data_production$AOW[is.na(data_production$AOW)]="NA"
+      #it imports NA (North America) as <NA> so I turn it back into "NA"
+    
+#Combine VLSI Data with Comtrade Data
+    #NB: VLSI data is in millions
+    
+#Graph VLSI Data
