@@ -1,2 +1,9 @@
 # semiconductor-trade
-Semiconductor Trade Data
+
+Requires manual download of 3 data files:
+Comtrade
+CEPII
+VLSI
+
+R Library Dependencies:
+gdata

@@ -130,8 +130,13 @@ library("ggrepel")
     data_trade_elasticity_subset
   
 #load VLSI Data
+    data_production=read.csv2(file="data/Manual Download/VLSI Production Data.csv",sep=",",header=T,skip=3)
+      #skip=3 to skip irrelevant rows as described in here https://stackoverflow.com/questions/23902421/designating-other-than-first-row-as-headers-in-r
+    data_production$AOW[is.na(data_production$AOW)]="NA"
+      #it imports NA (North America) as <NA> so I turn it back into "NA"
     
 #Combine VLSI Data with Comtrade Data
+    #NB: VLSI data is in millions
     
 #Graph VLSI Data
-
+data_po
