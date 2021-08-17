@@ -54,13 +54,13 @@ library("ggrepel")
         data_graph_comtrade <- subset(data_comtrade, (Commodity.Code %in% c(filterto_Commodity.Code)))
           #NTS: annual data calls it export (no -S)
           #NTS: monthly data calls it exports (yes -S)
-        #Determine top exporting coutnries
-          #sort data
-            top_countries <- data_graph_comtrade[data_graph_comtrade$date == max(data_graph_comtrade$date),]
-              #filter to most recent year only
-            top_countries <- top_countries[order(-top_countries$TradeValue),]
-              #sort by trade value, descending
-            top_X_countries <- top_countries$Reporter[1:4]
+      #Determine top exporting coutnries
+        #sort data
+          top_countries <- data_graph_comtrade[data_graph_comtrade$date == max(data_graph_comtrade$date),]
+            #filter to most recent year only
+          top_countries <- top_countries[order(-top_countries$TradeValue),]
+            #sort by trade value, descending
+          top_X_countries <- top_countries$Reporter[1:4]
       #delete data not from top countries
           #data_graph_comtrade <- subset(data_graph_comtrade, (Reporter %in% top_X_countries))
       #collapse data not from top 4 countries
@@ -79,6 +79,11 @@ library("ggrepel")
       data_graph_comtrade <- data_graph_comtrade
       data_graph_comtrade$label[which(data_graph_comtrade$Period == max(data_graph_comtrade$Period))] <- data_graph_comtrade$Reporter[which(data_graph_comtrade$Period == max(data_graph_comtrade$Period))]
       
+      #Change trade values from dollars to million USD
+        data_graph_comtrade$TradeValue=data_graph_comtrade$TradeValue/1000/1000/1000
+      
+      #Save plot as png
+        png(file=paste("data/Results/Exports of ",hs_codes_r[i],".png",sep=""))
         
       #graph subset
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
@@ -95,9 +100,9 @@ library("ggrepel")
           geom_point()+ 
         #Label title and axis
           #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
-          labs(title=filterto_Commodity.Code
+          labs(title=paste("Exports of",filterto_Commodity.Code,"by Top 4 Exporters and ROW")
              ,x="time"
-             ,y="Trade Value (USD)"
+             ,y="Exports (Billion USD)"
         )+
         geom_label_repel(aes(label = label),
                          nudge_x = 1,
@@ -110,6 +115,9 @@ library("ggrepel")
           #sets y axis values to range from 0 to whatever the max is
           #without this option, the min y value is set at whatever the min of the data is, not 0
       )
+      
+      dev.off()
+        #close graph file being saved to, so can open a new one
     }
 
 #Create table on CEPII trade data elascitiies
@@ -118,19 +126,28 @@ library("ggrepel")
         #hs_codes_r contain some codes that are 4 digit and some that are 6 digit
         #an HS6 in the trade elascitiy data passes the filter if it its HS6 is an exact match for the HS6 in the code list, or its HS4 is an exact match for an HS4 in the code list
       #keep trade data elasticities that match th filter
-        data_table_trade_elasticity <- subset(data_trade_elasticity, data_trade_elasticity$filter)
+        table_trade_elasticity <- subset(data_trade_elasticity, data_trade_elasticity$filter)
 
   #Create row with average trade elasticity of all( not just trade related) CEPII HSes
-    mean_TE_of_all_HS <- data.frame("mean of all (not just semi related) HS in CEPII database",0,0,mean(data_trade_elasticity$sigma, na.rm=TRUE),TRUE)
+    mean_TE_of_all_HS <- data.frame("mean of all (not just semi related) HS in CEPII database",NA,NA,mean(data_trade_elasticity$sigma, na.rm=TRUE),TRUE)
     #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/mean
     #na.rum =TRUE means it deletes NAs (otherwise it just gives NA for the mean)
-    names(mean_TE_of_all_HS) <- names(data_table_trade_elasticity)
+    names(mean_TE_of_all_HS) <- names(table_trade_elasticity)
       #this is necessary so that the new row binds with the existing datframe
   #Merge the mean row with the existing dataframe
-    data_table_trade_elasticity <- rbind(data_table_trade_elasticity,mean_TE_of_all_HS)
-  #Round to nearest whole number for ease of reading
-    data_table_trade_elasticity$sigma = round(data_table_trade_elasticity$sigma,0)
-    data_table_trade_elasticity
+    table_trade_elasticity <- rbind(table_trade_elasticity,mean_TE_of_all_HS)
+  #Clean Table
+    #Round to nearest whole number for ease of reading
+      table_trade_elasticity$sigma = round(table_trade_elasticity$sigma,0)
+    #Drop filter variable as no longer needed
+      table_trade_elasticity=table_trade_elasticity[names(table_trade_elasticity)!="filter"]
+    #Rename variable names to be more clear
+      names(table_trade_elasticity)[names(table_trade_elasticity)=="zero"]="Sig Dif from Zero?"
+      names(table_trade_elasticity)[names(table_trade_elasticity)=="positive"]="Any positive Elasticities?"
+      names(table_trade_elasticity)[names(table_trade_elasticity)=="sigma"]="Trade Elasticity"
+  #Export Table
+    table_trade_elasticity
+    write.csv(table_trade_elasticity, file="data/Results/Table Trade Elasticity.csv",row.names = F)
   
 #load VLSI Data
     data_production=read.csv2(file="data/Manual Download/VLSI Production Data.csv",sep=",",header=T,
@@ -230,9 +247,16 @@ library("ggrepel")
                 list_regions=c("USA","Netherlands","Japan")
                 for (i in 1:length(list_regions)) {
                   # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+                  
+                  #Save plot as png
+                    png(file=paste("data/Results/Prod and Exports by ",list_regions[i],".png",sep=""))
+                    #How to save a plot: https://www.datamentor.io/r-programming/saving-plot/
+                  
                   print(
                     #ggplot won't show up if inside loop without this option
                     #https://stackoverflow.com/questions/15678261/ggplot-does-not-work-if-it-is-inside-a-for-loop-although-it-works-outside-of-it
+                    
+                        
                     ggplot(data_pe_long[data_pe_long$Country==list_regions[i],], mapping = aes(x = Year, y = Value, group=Flow)) + #group specifies which data should be drawn as a single line
                       #adds lines and legend
                       geom_line(aes(linetype=Flow))+
@@ -243,7 +267,7 @@ library("ggrepel")
                       geom_point()+ 
                       #Label title and axis
                       #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
-                      labs(title=list_regions[i]
+                      labs(title=paste("Comparison of SME Exports (COMTRADE) and Firm Revenue (VLSI) for",list_regions[i])
                            ,x="time"
                            ,y="Billion USD"
                       )+
@@ -258,5 +282,10 @@ library("ggrepel")
                     #sets y axis values to range from 0 to whatever the max is
                     #without this option, the min y value is set at whatever the min of the data is, not 0
                   )
+                  
+                  dev.off()
+                    #Stops plotting this file, so can begin next file
+                  
                 }
 
+                
