@@ -44,9 +44,9 @@ library("ggrepel")
       #reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
 
 #create loop that creates graph for each HS code
-    hs_codes_r=c("848620","903082","903141")
-    for (i in 1:length(hs_codes_r)) {
-      filterto_Commodity.Code <- hs_codes_r[[i]]
+    hs_codes_COM=c("848620","903082","903141")
+    for (i in 1:length(hs_codes_COM)) {
+      filterto_Commodity.Code <- hs_codes_COM[[i]]
       #filter data to that HS code
         #example of how to both do bar chart and how to subset a dataframe is from
           #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
@@ -83,7 +83,7 @@ library("ggrepel")
         data_graph_comtrade$TradeValue=data_graph_comtrade$TradeValue/1000/1000/1000
       
       #Save plot as png
-        png(file=paste("data/Results/Exports of ",hs_codes_r[i],".png",sep=""))
+        png(file=paste("data/Results/Exports of ",hs_codes_COM[i],".png",sep=""))
         
       #graph subset
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
@@ -122,8 +122,13 @@ library("ggrepel")
 
 #Create table on CEPII trade data elascitiies
   #subset CEPII data to only look at those related to semiconductors
-      data_trade_elasticity$filter <- (substr(data_trade_elasticity$HS6,1,4) %in% hs_codes_r) | (substr(data_trade_elasticity$HS6,1,6) %in% hs_codes_r)
-        #hs_codes_r contain some codes that are 4 digit and some that are 6 digit
+      hs_codes_CEPII=append(hs_codes_COM,c("8541","8542","270900"))
+        #Semiconductors are split between 8541 and 8542
+          #Source: http://www.wcoomd.org/-/media/wco/public/global/pdf/events/2019/hs-conference/semiconductors-and-the-future-of-the-hs_sia-white-paper_april-2019.pdf?la=fr
+        #Crude oil is 270900
+          # Source:https://hts.usitc.gov/?query=crude%20petroleum
+      data_trade_elasticity$filter <- (substr(data_trade_elasticity$HS6,1,4) %in% hs_codes_CEPII) | (substr(data_trade_elasticity$HS6,1,6) %in% hs_codes_CEPII)
+        #hs_codes_CEPII contain some codes that are 4 digit and some that are 6 digit
         #an HS6 in the trade elascitiy data passes the filter if it its HS6 is an exact match for the HS6 in the code list, or its HS4 is an exact match for an HS4 in the code list
       #keep trade data elasticities that match th filter
         table_trade_elasticity <- subset(data_trade_elasticity, data_trade_elasticity$filter)
