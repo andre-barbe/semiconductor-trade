@@ -155,61 +155,61 @@ library("ggrepel")
     write.csv(table_trade_elasticity, file="data/Results/Table Trade Elasticity.csv",row.names = F)
   
 #load VLSI Data
-    data_production=read.csv2(file="data/Manual Download/VLSI Production Data.csv",sep=",",header=T,
+    data_revenue=read.csv2(file="data/Manual Download/VLSI Revenue Data.csv",sep=",",header=T,
                               skip=3
                                 #skip=3 to skip irrelevant rows as described in here https://stackoverflow.com/questions/23902421/designating-other-than-first-row-as-headers-in-r
                               #,colClasses = c("character","character","character","numeric","numeric","numeric","numeric","numeric")
                               ,stringsAsFactors = FALSE
                               )
     #Convert VLSI Data to Numeric
-    data_production$AOW[is.na(data_production$AOW)]="NA"
+    data_revenue$AOW[is.na(data_revenue$AOW)]="NA"
       #it imports NA (North America) as <NA> so I turn it back into "NA"
     #Label Netherlands firms as from NE, not EU
-      data_production$AOW[data_production$COMPANY %in% c("ASML","ASMI")]="NE"
+      data_revenue$AOW[data_revenue$COMPANY %in% c("ASML","ASMI")]="NE"
         #Per Will H's instructions, these are the companies in the Netherlands
       #see https://cset-collab.atlassian.net/browse/SEMI-41
-    data_production=data_production[data_production$AOW %in% c("NA","JA","NE"),]
+    data_revenue=data_revenue[data_revenue$AOW %in% c("NA","JA","NE"),]
     for (year in 2016:2020){
       var_name=paste("X",year,sep="")
         #define corresponding variable name for each year
-      data_production[,var_name][is.na(data_production[,var_name])]="0"
+      data_revenue[,var_name][is.na(data_revenue[,var_name])]="0"
         #replace NAs with "0"s
-      data_production[,var_name][data_production[,var_name]=="EX"]="0"
+      data_revenue[,var_name][data_revenue[,var_name]=="EX"]="0"
         #replace EXs with "0"s
-      data_production[,var_name]=as.numeric(data_production[,var_name])
+      data_revenue[,var_name]=as.numeric(data_revenue[,var_name])
         #convert to numeric
     }
 
       
     #Collapse VLSI Data by HQ Region
       #delete unused columns
-        data_production <- data_production[,names(data_production) %in% c("AOW","X2016","X2017","X2018","X2019","X2020")]
+        data_revenue <- data_revenue[,names(data_revenue) %in% c("AOW","X2016","X2017","X2018","X2019","X2020")]
       #aggregate the data together, summing over trade values, for each AOW
-        data_production_wide <- aggregate(cbind(data_production$X2016,data_production$X2017,data_production$X2018,data_production$X2019,data_production$X2020),
-                                           by = list(data_production$AOW), FUN = sum, na.rm=TRUE)
+        data_revenue_wide <- aggregate(cbind(data_revenue$X2016,data_revenue$X2017,data_revenue$X2018,data_revenue$X2019,data_revenue$X2020),
+                                           by = list(data_revenue$AOW), FUN = sum, na.rm=TRUE)
           #Reference: https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
       #For some reason, aggregating destroys all the column names so I have to put them back
-        names(data_production_wide)=c("Region","X2016","X2017","X2018","X2019","X2020")
+        names(data_revenue_wide)=c("Region","X2016","X2017","X2018","X2019","X2020")
     
       #Reshape data to long
         library(tidyr)
         #convert ID variable to factor
           #specified here http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/
-          data_production_wide$Region=as.factor(data_production_wide$Region)
+          data_revenue_wide$Region=as.factor(data_revenue_wide$Region)
         #Do reshaping
           #http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/
-          data_production_long <- gather(data_production_wide, Year, Production, X2016:X2020, factor_key=TRUE)
+          data_revenue_long <- gather(data_revenue_wide, Year, Revenue, X2016:X2020, factor_key=TRUE)
         
         #Convert years to numeric  
           library(stringr)
-          data_production_long$Year=as.numeric(str_sub(data_production_long$Year,-4))
+          data_revenue_long$Year=as.numeric(str_sub(data_revenue_long$Year,-4))
         
-        #Convert report names to "country" to prep for merge with produciton data
-          names(data_production_long)[names(data_production_long)=="Region"]="Country"
+        #Convert report names to "country" to prep for merge with revenue data
+          names(data_revenue_long)[names(data_revenue_long)=="Region"]="Country"
         #Convert country names to long names to prep for merge
-          levels(data_production_long$Country)[levels(data_production_long$Country)=="JA"]="Japan"
-          levels(data_production_long$Country)[levels(data_production_long$Country)=="NE"]="Netherlands"
-          levels(data_production_long$Country)[levels(data_production_long$Country)=="NA"]="USA"
+          levels(data_revenue_long$Country)[levels(data_revenue_long$Country)=="JA"]="Japan"
+          levels(data_revenue_long$Country)[levels(data_revenue_long$Country)=="NE"]="Netherlands"
+          levels(data_revenue_long$Country)[levels(data_revenue_long$Country)=="NA"]="USA"
           
           
       #Create COMTRADE Dataset by country
@@ -225,17 +225,17 @@ library("ggrepel")
           #Convert Country to factor
             data_graph_comtrade_country$Country=as.factor(data_graph_comtrade_country$Country)
       
-      #Merge production and comtrade data
-          data_pe_wide=merge(data_graph_comtrade_country,data_production_long,by=c("Country","Year"))
+      #Merge revenue and comtrade data
+          data_pe_wide=merge(data_graph_comtrade_country,data_revenue_long,by=c("Country","Year"))
           #Convert data to all be billions
             data_pe_wide$Exports=data_pe_wide$Exports/1000/1000/1000 #Exports are originally in dollars
-            data_pe_wide$Production=data_pe_wide$Production/1000  #Production originally in million dollars
+            data_pe_wide$Revenue=data_pe_wide$Revenue/1000  #revenue originally in million dollars
           #Reshape dataset to long
             #http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/
-            data_pe_long <- gather(data_pe_wide, Flow, Value, Production:Exports, factor_key=TRUE)
+            data_pe_long <- gather(data_pe_wide, Flow, Value, Revenue:Exports, factor_key=TRUE)
             
             
-      #Graph Production and Export Data by Country
+      #Graph revenue and Export Data by Country
             
             #Convert Flow from factor to character
               #https://stackoverflow.com/questions/2851015/convert-data-frame-columns-from-factors-to-characters
@@ -243,7 +243,7 @@ library("ggrepel")
               data_pe_long %>% mutate(across(where(is.factor), as.character)) -> data_pe_long
             
             
-              #add labels next to line, at the last year, of each production type
+              #add labels next to line, at the last year, of each revenue type
                 #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
                 data_pe_long$label[which(data_pe_long$Year == max(data_pe_long$Year))] <-
                   data_pe_long$Flow[which(data_pe_long$Year == max(data_pe_long$Year))]
@@ -272,7 +272,7 @@ library("ggrepel")
                       geom_point()+ 
                       #Label title and axis
                       #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
-                      labs(title=paste("Comparison of SME Exports (COMTRADE) and Firm Revenue (VLSI) for",list_regions[i])
+                      labs(title=paste(list_regions[i],": Comparison of Domestic Exports (COMTRADE) and Worldwide Revenue of Firms HQed here (VLSI)")
                            ,x="time"
                            ,y="Billion USD"
                       )+
