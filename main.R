@@ -51,7 +51,7 @@
     #Prepares data to be graphed
       data_agg_SME=data_comtrade #Creates data set for this graph
       #collapse data not from top 4 countries
-        data_agg_SME$Reporter[!(data_agg_SME$Reporter %in% c("USA","Netherlands","Japan"))] <- "Rest of world" #Turns all countries that aren't US, Neth, or J into "Rest of WOrld"
+        data_agg_SME$Reporter[!(data_agg_SME$Reporter %in% c("USA","Netherlands","Japan","Singapore"))] <- "Rest of world" #Turns all countries that aren't US, Neth, or J into "Rest of WOrld"
         data_agg_SME <- data_agg_SME[,names(data_agg_SME) %in% c("Commodity.Code","Period","Reporter","TradeValue")]     #Delete all columns except for the ones I am using
         data_agg_SME <- aggregate(data_agg_SME$TradeValue, by = list(data_agg_SME$Period,data_agg_SME$Reporter), FUN = sum, na.rm=TRUE) #aggregate the data together, summing over trade values, for groups of period/title pairs
           #Reference: https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
