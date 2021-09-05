@@ -8,7 +8,7 @@
   
 #Manually download data
   #CEPII Data comes from http://www.cepii.fr/cepii/en/bdd_modele/presentation.asp?id=35
-  #UN COmtrade data comes from
+  #UN Comtrade data comes from
     #/api/get?max=502&type=C&freq=A&px=HS&ps=2020%2C2019%2C2018%2C2017%2C2016&r=all&p=0&rg=all&cc=848620%2C903082%2C903141
     #website: https://comtrade.un.org/data/
 
@@ -99,6 +99,7 @@
         #without this option, the min y value is set at whatever the min of the data is, not 0
       ) #closes print
     dev.off() #close png for graph file being saved to, so can open a new one
+    write.csv(data_agg_SME, file=paste("data/Results/Table of Exports of All SME Combined.csv",sep=""),row.names = F) #Exports results to make fact checking easier
     
 #create loop that creates graph for each HS code
     hs_codes_COM=c("848620","903082","903141")
@@ -171,12 +172,12 @@
           #sets y axis values to range from 0 to whatever the max is
           #without this option, the min y value is set at whatever the min of the data is, not 0
       )
-      
       dev.off()
         #close graph file being saved to, so can open a new one
+      write.csv(data_graph_comtrade_temp, file=paste("data/Results/Table of Exports of ",hs_codes_COM[i],".csv",sep=""),row.names = F) #Exports results to make fact checking easier
     }
-
     
+
     
     
 #Create table on CEPII trade data elascitiies---------------------------------------------
@@ -344,6 +345,7 @@
         ) #close print
       dev.off() #Stops plotting this graph file, so can begin next file for next country
       } #Close loop over countries
+      write.csv(data_pe_long, file=paste("data/Results/Table of Exports vs WW Revenue.csv",sep=""),row.names = F) #Exports results to make fact checking easier
 
     print("Job Completed Successfully")
                 
