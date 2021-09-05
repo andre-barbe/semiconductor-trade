@@ -11,6 +11,7 @@
   #UN Comtrade data comes from
     #/api/get?max=502&type=C&freq=A&px=HS&ps=2020%2C2019%2C2018%2C2017%2C2016&r=all&p=0&rg=all&cc=848620%2C903082%2C903141
     #website: https://comtrade.un.org/data/
+  #VLSI Data comes from https://docs.google.com/spreadsheets/d/12FQNXKI9HYhufEcglCYa2q8DowADL_md/edit#gid=530271360 (not Public)
 
 #load comtrade data    
     data_comtrade=read.csv2(sep=",",file="Inputs Manual Download/comtrade 2021-08-16.csv")
@@ -111,7 +112,7 @@
                            "Total Allies",
                            sum_allied_SME_exports_2020,
                            round(100*480/1000/sum_allied_SME_exports_2020,1)
-                            #Percentage of 2021 China <=10nm equipment spendinng.
+                            #Percentage of 2021 China <=10nm equipment spending.
                             #The number 480 million is from here: https://docs.google.com/spreadsheets/d/1SiiEytk54fNhxXEMLaBCUXEDAA6cL7XsA3xPxOBl5mM/edit#gid=1406310715&range=E43
                            )
       )
