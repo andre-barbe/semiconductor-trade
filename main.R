@@ -13,7 +13,7 @@
     #website: https://comtrade.un.org/data/
 
 #load comtrade data    
-    data_comtrade=read.csv2(sep=",",file="data/Manual Download/comtrade 2021-08-16.csv")
+    data_comtrade=read.csv2(sep=",",file="Inputs Manual Download/comtrade 2021-08-16.csv")
     #How to save CSV files https://sphweb.bumc.bu.edu/otlt/MPH-Modules/BS/R/R-Manual/R-Manual5.html
         
 #Clean data comtrade data
@@ -33,7 +33,7 @@
     #already download
     #Source: http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=35
   #Load Data
-    data_trade_elasticity <- read.csv(file="data/Manual Download/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
+    data_trade_elasticity <- read.csv(file="Inputs Manual Download/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
     #colClasses tells the readCSV that the HS6 is a character, not numeric. Otherwise it thinks it is numeric and deletes leading zeroes
 
     
@@ -66,7 +66,7 @@
       data_agg_SME$label[which(data_agg_SME$Period == max(data_agg_SME$Period))] <- data_agg_SME$Reporter[which(data_agg_SME$Period == max(data_agg_SME$Period))]
       
       #Save plot as png
-      png(file=paste("data/Results/Exports of ALL SME Combined.png",sep=""))
+      png(file=paste("Results/Exports of ALL SME Combined.png",sep=""))
       
       #graph subset
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
@@ -99,90 +99,90 @@
         #without this option, the min y value is set at whatever the min of the data is, not 0
       ) #closes print
     dev.off() #close png for graph file being saved to, so can open a new one
-    write.csv(data_agg_SME, file=paste("data/Results/Table of Exports of All SME Combined.csv",sep=""),row.names = F) #Exports results to make fact checking easier
+    write.csv(data_agg_SME, file=paste("Results/Table of Exports of All SME Combined.csv",sep=""),row.names = F) #Exports results to make fact checking easier
     
-#create loop that creates graph for each HS code
-    hs_codes_COM=c("848620","903082","903141")
-    for (i in 1:length(hs_codes_COM)) {
-      filterto_Commodity.Code <- hs_codes_COM[[i]]
-      #filter data to that HS code
-        #example of how to both do bar chart and how to subset a dataframe is from
-          #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      #delete data not in filter
-        data_graph_comtrade_temp <- subset(data_comtrade, (Commodity.Code %in% c(filterto_Commodity.Code)))
-          #NTS: annual data calls it export (no -S)
-          #NTS: monthly data calls it exports (yes -S)
-      #Determine top exporting coutnries
-        #sort data
-          top_countries <- data_graph_comtrade_temp[data_graph_comtrade_temp$date == max(data_graph_comtrade_temp$date),]
-            #filter to most recent year only
-          top_countries <- top_countries[order(-top_countries$TradeValue),]
-            #sort by trade value, descending
-          top_X_countries <- top_countries$Reporter[1:4]
-      #delete data not from top countries
-          #data_graph_comtrade_temp <- subset(data_graph_comtrade_temp, (Reporter %in% top_X_countries))
-      #collapse data not from top 4 countries
-        #if not in top 4, change name to "rest of world"
-          data_graph_comtrade_temp$Reporter[!(data_graph_comtrade_temp$Reporter %in% top_X_countries)] <- "Rest of world"
-        #Delete all columns except for the ones I am using
-          data_graph_comtrade_temp <- data_graph_comtrade_temp[,names(data_graph_comtrade_temp) %in% c("Commodity.Code","Period","Reporter","TradeValue")]
-        #aggregate the data together, summing over trade values, for groups of period/title pairs
-          data_graph_comtrade_temp <- aggregate(data_graph_comtrade_temp$TradeValue, by = list(data_graph_comtrade_temp$Period,data_graph_comtrade_temp$Reporter), FUN = sum, na.rm=TRUE)
-          #Reference: https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
-        names(data_graph_comtrade_temp)=c("Period","Reporter","TradeValue")
-          #For some reason, aggregating destroys all the column names so I have to put them back
-          
-      #add labels next to line
-        #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
-      data_graph_comtrade_temp$label[which(data_graph_comtrade_temp$Period == max(data_graph_comtrade_temp$Period))] <- data_graph_comtrade_temp$Reporter[which(data_graph_comtrade_temp$Period == max(data_graph_comtrade_temp$Period))]
-      
-      #Change trade values from dollars to million USD
-        data_graph_comtrade_temp$TradeValue=data_graph_comtrade_temp$TradeValue/1000/1000/1000
-      
-      #Save plot as png
-        png(file=paste("data/Results/Exports of ",hs_codes_COM[i],".png",sep=""))
-        
-      #graph subset
-      # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
-      print(
-        #ggplot won't show up if inside loop without this option
-          #https://stackoverflow.com/questions/15678261/ggplot-does-not-work-if-it-is-inside-a-for-loop-although-it-works-outside-of-it
-        ggplot(data_graph_comtrade_temp, mapping = aes(x = Period, y = TradeValue, group=Reporter)) + #group specifies which data should be drawn as a single line
-        #adds lines and legend
-          geom_line(aes(linetype=Reporter))+
-        #geom_lineadds the lines to the graph.
-        #linetype specification adds teh legend
-        #add big points (scatterplot)
-          #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
-          geom_point()+ 
-        #Label title and axis
-          #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
-          labs(title=paste("Exports of",filterto_Commodity.Code,"by Top 4 Exporters and ROW")
-             ,x="time"
-             ,y="Exports (Billion USD)"
-        )+
-        geom_label_repel(aes(label = label),
-                         nudge_x = 1,
-                         na.rm = TRUE)
-          #adds the line labels next to the lines
-        +theme(legend.position = "none")
-            #removes the legend
-        +ylim(0, max(data_graph_comtrade_temp$TradeValue))
-          #https://ggplot2.tidyverse.org/reference/lims.html
-          #sets y axis values to range from 0 to whatever the max is
-          #without this option, the min y value is set at whatever the min of the data is, not 0
-      )
-      dev.off()
-        #close graph file being saved to, so can open a new one
-      write.csv(data_graph_comtrade_temp, file=paste("data/Results/Table of Exports of ",hs_codes_COM[i],".csv",sep=""),row.names = F) #Exports results to make fact checking easier
-    }
-    
+# #create loop that creates graph for each HS code
+#     hs_codes_COM=c("848620","903082","903141")
+#     for (i in 1:length(hs_codes_COM)) {
+#       filterto_Commodity.Code <- hs_codes_COM[[i]]
+#       #filter data to that HS code
+#         #example of how to both do bar chart and how to subset a dataframe is from
+#           #https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+#       #delete data not in filter
+#         data_graph_comtrade_temp <- subset(data_comtrade, (Commodity.Code %in% c(filterto_Commodity.Code)))
+#           #NTS: annual data calls it export (no -S)
+#           #NTS: monthly data calls it exports (yes -S)
+#       #Determine top exporting coutnries
+#         #sort data
+#           top_countries <- data_graph_comtrade_temp[data_graph_comtrade_temp$date == max(data_graph_comtrade_temp$date),]
+#             #filter to most recent year only
+#           top_countries <- top_countries[order(-top_countries$TradeValue),]
+#             #sort by trade value, descending
+#           top_X_countries <- top_countries$Reporter[1:4]
+#       #delete data not from top countries
+#           #data_graph_comtrade_temp <- subset(data_graph_comtrade_temp, (Reporter %in% top_X_countries))
+#       #collapse data not from top 4 countries
+#         #if not in top 4, change name to "rest of world"
+#           data_graph_comtrade_temp$Reporter[!(data_graph_comtrade_temp$Reporter %in% top_X_countries)] <- "Rest of world"
+#         #Delete all columns except for the ones I am using
+#           data_graph_comtrade_temp <- data_graph_comtrade_temp[,names(data_graph_comtrade_temp) %in% c("Commodity.Code","Period","Reporter","TradeValue")]
+#         #aggregate the data together, summing over trade values, for groups of period/title pairs
+#           data_graph_comtrade_temp <- aggregate(data_graph_comtrade_temp$TradeValue, by = list(data_graph_comtrade_temp$Period,data_graph_comtrade_temp$Reporter), FUN = sum, na.rm=TRUE)
+#           #Reference: https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group
+#         names(data_graph_comtrade_temp)=c("Period","Reporter","TradeValue")
+#           #For some reason, aggregating destroys all the column names so I have to put them back
+#           
+#       #add labels next to line
+#         #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
+#       data_graph_comtrade_temp$label[which(data_graph_comtrade_temp$Period == max(data_graph_comtrade_temp$Period))] <- data_graph_comtrade_temp$Reporter[which(data_graph_comtrade_temp$Period == max(data_graph_comtrade_temp$Period))]
+#       
+#       #Change trade values from dollars to million USD
+#         data_graph_comtrade_temp$TradeValue=data_graph_comtrade_temp$TradeValue/1000/1000/1000
+#       
+#       #Save plot as png
+#         png(file=paste("Results/Exports of ",hs_codes_COM[i],".png",sep=""))
+#         
+#       #graph subset
+#       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
+#       print(
+#         #ggplot won't show up if inside loop without this option
+#           #https://stackoverflow.com/questions/15678261/ggplot-does-not-work-if-it-is-inside-a-for-loop-although-it-works-outside-of-it
+#         ggplot(data_graph_comtrade_temp, mapping = aes(x = Period, y = TradeValue, group=Reporter)) + #group specifies which data should be drawn as a single line
+#         #adds lines and legend
+#           geom_line(aes(linetype=Reporter))+
+#         #geom_lineadds the lines to the graph.
+#         #linetype specification adds teh legend
+#         #add big points (scatterplot)
+#           #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
+#           geom_point()+ 
+#         #Label title and axis
+#           #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
+#           labs(title=paste("Exports of",filterto_Commodity.Code,"by Top 4 Exporters and ROW")
+#              ,x="time"
+#              ,y="Exports (Billion USD)"
+#         )+
+#         geom_label_repel(aes(label = label),
+#                          nudge_x = 1,
+#                          na.rm = TRUE)
+#           #adds the line labels next to the lines
+#         +theme(legend.position = "none")
+#             #removes the legend
+#         +ylim(0, max(data_graph_comtrade_temp$TradeValue))
+#           #https://ggplot2.tidyverse.org/reference/lims.html
+#           #sets y axis values to range from 0 to whatever the max is
+#           #without this option, the min y value is set at whatever the min of the data is, not 0
+#       )
+#       dev.off()
+#         #close graph file being saved to, so can open a new one
+#       write.csv(data_graph_comtrade_temp, file=paste("Results/Table of Exports of ",hs_codes_COM[i],".csv",sep=""),row.names = F) #Exports results to make fact checking easier
+#     }
+#     
 
     
     
 #Create table on CEPII trade data elascitiies---------------------------------------------
-  #subset CEPII data to only look at those related to semiconductors
-    hs_codes_CEPII=append(hs_codes_COM,c("8541","8542","270900"))
+  #subset CEPII data to only look at those related to SME or semiconductors
+    hs_codes_CEPII=append(c("848620","903082","903141"),c("8541","8542","270900"))
       #Semiconductors are split between 8541 and 8542
         #Source: http://www.wcoomd.org/-/media/wco/public/global/pdf/events/2019/hs-conference/semiconductors-and-the-future-of-the-hs_sia-white-paper_april-2019.pdf?la=fr
       #Crude oil is 270900
@@ -211,7 +211,7 @@
       names(table_trade_elasticity)[names(table_trade_elasticity)=="sigma"]="Trade Elasticity"
   #Export Table
     table_trade_elasticity
-    write.csv(table_trade_elasticity, file="data/Results/Table Trade Elasticity.csv",row.names = F)
+    write.csv(table_trade_elasticity, file="Results/Table Trade Elasticity.csv",row.names = F)
 
     
     
@@ -223,7 +223,7 @@
     
 #Load Data and Create Graph for VLSI Revenue / Comtrade Exports---------------------------------
   #load VLSI Data
-    data_revenue=read.csv2(file="data/Manual Download/VLSI Revenue Data.csv",sep=",",header=T,
+    data_revenue=read.csv2(file="Inputs Manual Download/VLSI Revenue Data.csv",sep=",",header=T,
                               skip=3
                                 #skip=3 to skip irrelevant rows as described in here https://stackoverflow.com/questions/23902421/designating-other-than-first-row-as-headers-in-r
                               #,colClasses = c("character","character","character","numeric","numeric","numeric","numeric","numeric")
@@ -313,7 +313,7 @@
       list_regions=c("USA","Netherlands","Japan")
       for (i in 1:length(list_regions)) {
         #Save plot as png
-          png(file=paste("data/Results/Prod and Exports by ",list_regions[i],".png",sep=""))
+          png(file=paste("Results/Prod and Exports by ",list_regions[i],".png",sep=""))
           #How to save a plot: https://www.datamentor.io/r-programming/saving-plot/
         print(
           #ggplot won't show up if inside loop without this option
@@ -345,7 +345,7 @@
         ) #close print
       dev.off() #Stops plotting this graph file, so can begin next file for next country
       } #Close loop over countries
-      write.csv(data_pe_long, file=paste("data/Results/Table of Exports vs WW Revenue.csv",sep=""),row.names = F) #Exports results to make fact checking easier
+      write.csv(data_pe_long, file=paste("Results/Table of Exports vs WW Revenue.csv",sep=""),row.names = F) #Exports results to make fact checking easier
 
     print("Job Completed Successfully")
                 
