@@ -13,7 +13,7 @@
     #website: https://comtrade.un.org/data/
 
 #load comtrade data    
-    data_comtrade=read.csv2(sep=",",file="data/Manual Download/comtrade 2021-08-16.csv")
+    data_comtrade=read.csv2(sep=",",file="Inputs Manual Download/comtrade 2021-08-16.csv")
     #How to save CSV files https://sphweb.bumc.bu.edu/otlt/MPH-Modules/BS/R/R-Manual/R-Manual5.html
         
 #Clean data comtrade data
@@ -33,7 +33,7 @@
     #already download
     #Source: http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=35
   #Load Data
-    data_trade_elasticity <- read.csv(file="data/Manual Download/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
+    data_trade_elasticity <- read.csv(file="Inputs Manual Download/ProTEE_0_1.csv", header=TRUE, colClasses = c("character","numeric","numeric","numeric"))
     #colClasses tells the readCSV that the HS6 is a character, not numeric. Otherwise it thinks it is numeric and deletes leading zeroes
 
     
@@ -66,7 +66,7 @@
       data_agg_SME$label[which(data_agg_SME$Period == max(data_agg_SME$Period))] <- data_agg_SME$Reporter[which(data_agg_SME$Period == max(data_agg_SME$Period))]
       
       #Save plot as png
-      png(file=paste("data/Results/Exports of ALL SME Combined.png",sep=""))
+      png(file=paste("Results/Exports of ALL SME Combined.png",sep=""))
       
       #graph subset
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
@@ -99,7 +99,7 @@
         #without this option, the min y value is set at whatever the min of the data is, not 0
       ) #closes print
     dev.off() #close png for graph file being saved to, so can open a new one
-    write.csv(data_agg_SME, file=paste("data/Results/Table of Exports of All SME Combined.csv",sep=""),row.names = F) #Exports results to make fact checking easier
+    write.csv(data_agg_SME, file=paste("Results/Table of Exports of All SME Combined.csv",sep=""),row.names = F) #Exports results to make fact checking easier
     
 # #create loop that creates graph for each HS code
 #     hs_codes_COM=c("848620","903082","903141")
@@ -140,7 +140,7 @@
 #         data_graph_comtrade_temp$TradeValue=data_graph_comtrade_temp$TradeValue/1000/1000/1000
 #       
 #       #Save plot as png
-#         png(file=paste("data/Results/Exports of ",hs_codes_COM[i],".png",sep=""))
+#         png(file=paste("Results/Exports of ",hs_codes_COM[i],".png",sep=""))
 #         
 #       #graph subset
 #       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
@@ -174,7 +174,7 @@
 #       )
 #       dev.off()
 #         #close graph file being saved to, so can open a new one
-#       write.csv(data_graph_comtrade_temp, file=paste("data/Results/Table of Exports of ",hs_codes_COM[i],".csv",sep=""),row.names = F) #Exports results to make fact checking easier
+#       write.csv(data_graph_comtrade_temp, file=paste("Results/Table of Exports of ",hs_codes_COM[i],".csv",sep=""),row.names = F) #Exports results to make fact checking easier
 #     }
 #     
 
@@ -211,7 +211,7 @@
       names(table_trade_elasticity)[names(table_trade_elasticity)=="sigma"]="Trade Elasticity"
   #Export Table
     table_trade_elasticity
-    write.csv(table_trade_elasticity, file="data/Results/Table Trade Elasticity.csv",row.names = F)
+    write.csv(table_trade_elasticity, file="Results/Table Trade Elasticity.csv",row.names = F)
 
     
     
@@ -223,7 +223,7 @@
     
 #Load Data and Create Graph for VLSI Revenue / Comtrade Exports---------------------------------
   #load VLSI Data
-    data_revenue=read.csv2(file="data/Manual Download/VLSI Revenue Data.csv",sep=",",header=T,
+    data_revenue=read.csv2(file="Inputs Manual Download/VLSI Revenue Data.csv",sep=",",header=T,
                               skip=3
                                 #skip=3 to skip irrelevant rows as described in here https://stackoverflow.com/questions/23902421/designating-other-than-first-row-as-headers-in-r
                               #,colClasses = c("character","character","character","numeric","numeric","numeric","numeric","numeric")
@@ -313,7 +313,7 @@
       list_regions=c("USA","Netherlands","Japan")
       for (i in 1:length(list_regions)) {
         #Save plot as png
-          png(file=paste("data/Results/Prod and Exports by ",list_regions[i],".png",sep=""))
+          png(file=paste("Results/Prod and Exports by ",list_regions[i],".png",sep=""))
           #How to save a plot: https://www.datamentor.io/r-programming/saving-plot/
         print(
           #ggplot won't show up if inside loop without this option
@@ -345,7 +345,7 @@
         ) #close print
       dev.off() #Stops plotting this graph file, so can begin next file for next country
       } #Close loop over countries
-      write.csv(data_pe_long, file=paste("data/Results/Table of Exports vs WW Revenue.csv",sep=""),row.names = F) #Exports results to make fact checking easier
+      write.csv(data_pe_long, file=paste("Results/Table of Exports vs WW Revenue.csv",sep=""),row.names = F) #Exports results to make fact checking easier
 
     print("Job Completed Successfully")
                 
