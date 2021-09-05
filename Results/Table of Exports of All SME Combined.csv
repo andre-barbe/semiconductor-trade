@@ -1,26 +1,27 @@
 "Period","Reporter","TradeValue","label"
-2016,"Japan",9.319590471,NA
-2017,"Japan",12.028532758,NA
-2018,"Japan",13.9446305,NA
-2019,"Japan",13.795971043,NA
-2020,"Japan",14.679193994,"Japan"
-2016,"Netherlands",4.312960748,NA
-2017,"Netherlands",6.2377637,NA
-2018,"Netherlands",9.752636508,NA
-2019,"Netherlands",10.608965338,NA
-2020,"Netherlands",11.74472174,"Netherlands"
-2016,"Rest of world",6.266616451,NA
-2017,"Rest of world",7.532918986,NA
-2018,"Rest of world",9.042163677,NA
-2019,"Rest of world",10.636189065,NA
-2020,"Rest of world",10.848630812,"Rest of world"
-2016,"Singapore",3.394138071,NA
-2017,"Singapore",5.245544505,NA
-2018,"Singapore",5.032975472,NA
-2019,"Singapore",5.571866884,NA
-2020,"Singapore",7.186985084,"Singapore"
-2016,"USA",10.568203812,NA
-2017,"USA",14.052510066,NA
-2018,"USA",14.24438541,NA
-2019,"USA",11.777129115,NA
-2020,"USA",14.712386058,"USA"
+"2016","Japan","9.319590471",NA
+"2017","Japan","12.028532758",NA
+"2018","Japan","13.9446305",NA
+"2019","Japan","13.795971043",NA
+"2020","Japan","14.679193994","Japan"
+"2016","Netherlands","4.312960748",NA
+"2017","Netherlands","6.2377637",NA
+"2018","Netherlands","9.752636508",NA
+"2019","Netherlands","10.608965338",NA
+"2020","Netherlands","11.74472174","Netherlands"
+"2016","Rest of world","6.266616451",NA
+"2017","Rest of world","7.532918986",NA
+"2018","Rest of world","9.042163677",NA
+"2019","Rest of world","10.636189065",NA
+"2020","Rest of world","10.848630812","Rest of world"
+"2016","Singapore","3.394138071",NA
+"2017","Singapore","5.245544505",NA
+"2018","Singapore","5.032975472",NA
+"2019","Singapore","5.571866884",NA
+"2020","Singapore","7.186985084","Singapore"
+"2016","USA","10.568203812",NA
+"2017","USA","14.052510066",NA
+"2018","USA","14.24438541",NA
+"2019","USA","11.777129115",NA
+"2020","USA","14.712386058","USA"
+"2020","Total Allies","41.136301792","1.2"

@@ -99,6 +99,23 @@
         #without this option, the min y value is set at whatever the min of the data is, not 0
       ) #closes print
     dev.off() #close png for graph file being saved to, so can open a new one
+    #Add total row to data frame
+    sum_allied_SME_exports_2020 =  
+      sum(as.numeric(data_agg_SME$TradeValue[
+            data_agg_SME$Period==2020
+            &(data_agg_SME$Reporter %in% c("USA","Japan","Netherlands"))
+          ]
+          ))
+      data_agg_SME=rbind(data_agg_SME,
+                         c("2020",
+                           "Total Allies",
+                           sum_allied_SME_exports_2020,
+                           round(100*480/1000/sum_allied_SME_exports_2020,1)
+                            #Percentage of 2021 China <=10nm equipment spendinng.
+                            #The number 480 million is from here: https://docs.google.com/spreadsheets/d/1SiiEytk54fNhxXEMLaBCUXEDAA6cL7XsA3xPxOBl5mM/edit#gid=1406310715&range=E43
+                           )
+      )
+      
     write.csv(data_agg_SME, file=paste("Results/Table of Exports of All SME Combined.csv",sep=""),row.names = F) #Exports results to make fact checking easier
     
 # #create loop that creates graph for each HS code
