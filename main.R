@@ -313,19 +313,25 @@
     #Convert data to all be billions
       data_pe_wide$Exports=data_pe_wide$Exports/1000/1000/1000 #Exports are originally in dollars
       data_pe_wide$Revenue=data_pe_wide$Revenue/1000  #revenue originally in million dollars
+      
+    #Calculate exports as a percent of revenue
+      data_pe_wide$PercentExpRev=100 * data_pe_wide$Exports / data_pe_wide$Revenue
     #Reshape dataset to long
       #http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/
-      data_pe_long <- gather(data_pe_wide, Flow, Value, Revenue:Exports, factor_key=TRUE)
+      data_pe_long <- gather(data_pe_wide, Flow, Value, c("Revenue","Exports","PercentExpRev"), factor_key=TRUE)
     #Convert Flow from factor to character
       #https://stackoverflow.com/questions/2851015/convert-data-frame-columns-from-factors-to-characters
       library(dplyr)
       data_pe_long %>% mutate(across(where(is.factor), as.character)) -> data_pe_long
             
-  #Create Graphs of revenue and Export Data by Country
+  #Create Graphs of revenue and Export Data by Country. One graph for each country
+    
     #add labels next to line, at the last year, of each revenue type
       #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
-      data_pe_long$label[which(data_pe_long$Year == max(data_pe_long$Year))] <-
+      data_pe_long$label3country[which(data_pe_long$Year == max(data_pe_long$Year))] <-
         data_pe_long$Flow[which(data_pe_long$Year == max(data_pe_long$Year))]
+    
+    #Create 3 graphs, one for each country  
     #Loop to create line for each country
       # From https://www.datanovia.com/en/blog/how-to-subset-a-dataset-when-plotting-with-ggplot2/
       list_regions=c("USA","Netherlands","Japan")
@@ -336,34 +342,102 @@
         print(
           #ggplot won't show up if inside loop without this option
           #https://stackoverflow.com/questions/15678261/ggplot-does-not-work-if-it-is-inside-a-for-loop-although-it-works-outside-of-it
-          ggplot(data_pe_long[data_pe_long$Country==list_regions[i],], mapping = aes(x = Year, y = Value, group=Flow)) + #group specifies which data should be drawn as a single line
+          ggplot(data_pe_long[(data_pe_long$Country==list_regions[i] & #defines which countries to graph. IE only for the country of counter i in the country list
+                              data_pe_long$Flow!="PercentExpRev"), #defines which flows to graph. IE, not PercentExpRev
+                              ],
+                 mapping = aes(x = Year, y = Value, group=Flow)) + #group specifies which data should be drawn as a single line
+          
             #adds lines and legend
             geom_line(aes(linetype=Flow))+
-            #geom_lineadds the lines to the graph.
-            #linetype specification adds teh legend
+            #geom_line adds the lines to the graph.
+            #linetype specification adds thh legend
             #add big points (scatterplot)
             #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
+            
+            # Add points to lines, like combination line and scatter
             geom_point()+ 
+            
             #Label title and axis
             #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
             labs(title=paste(list_regions[i],": Comparison of Domestic Exports (COMTRADE) and Worldwide Revenue of Firms HQed here (VLSI)")
                  ,x="time"
                  ,y="Billion USD"
             )+
-            geom_label_repel(aes(label = label),
+
+            geom_label_repel(aes(label = label3country),
+                             nudge_x = 1,
+                             na.rm = TRUE)
+            #adds the line labels next to the lines
+            
+            +theme(legend.position = "none")
+            #removes the legend
+            
+            +ylim(0, max(data_pe_long$Value))
+            #https://ggplot2.tidyverse.org/reference/lims.html
+            #sets y axis values to range from 0 to whatever the max is
+            #without this option, the min y value is set at whatever the min of the data is, not 0
+          
+        ) #close print
+        
+      dev.off() #Stops plotting this graph file, so can begin next file for next country
+      
+      } #Close loop over countries
+    
+      #Create 1 graph, all together. As percent  
+      #add labels next to line, at the last year, of country name
+      #Reference: https://statisticsglobe.com/add-labels-at-ends-of-lines-in-ggplot2-line-plot-r
+      data_pe_long$label1country[which(data_pe_long$Year == max(data_pe_long$Year))] <-
+        data_pe_long$Country[which(data_pe_long$Year == max(data_pe_long$Year))]
+      
+      #Save plot as png
+        png(file=paste("Results/Prod and Exports by All (Percent).png",sep=""))
+        #How to save a plot: https://www.datamentor.io/r-programming/saving-plot/
+        print(
+          #ggplot won't show up if inside loop without this option
+          #https://stackoverflow.com/questions/15678261/ggplot-does-not-work-if-it-is-inside-a-for-loop-although-it-works-outside-of-it
+          ggplot(data_pe_long[(1 & #defines which countries to graph. IE only for the country of counter i in the country list
+                                 data_pe_long$Flow=="PercentExpRev"), #defines which flows to graph. IE, not PercentExpRev
+          ],
+          mapping = aes(x = Year, y = Value, group=Country)) + #group specifies which data should be drawn as a single line
+            
+            #adds lines and legend
+            geom_line(aes(linetype=Flow))+
+            #geom_line adds the lines to the graph.
+            #linetype specification adds thh legend
+            #add big points (scatterplot)
+            #reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization  
+            
+            # Add points to lines, like combination line and scatter
+            geom_point()+ 
+            
+            #Label title and axis
+            #Reference: http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization#customized-line-graphs
+            labs(title=paste("Exports from HQ-Country (COMTRADE), as percent of Worldwide Revenue of Firms HQed there (VLSI)")
+                 ,x="time"
+                 ,y="Percent"
+            )+
+            
+            geom_label_repel(aes(label = label1country),
                              nudge_x = 1,
                              na.rm = TRUE)
           #adds the line labels next to the lines
+          
           +theme(legend.position = "none")
           #removes the legend
+          
           +ylim(0, max(data_pe_long$Value))
           #https://ggplot2.tidyverse.org/reference/lims.html
           #sets y axis values to range from 0 to whatever the max is
           #without this option, the min y value is set at whatever the min of the data is, not 0
+          
         ) #close print
-      dev.off() #Stops plotting this graph file, so can begin next file for next country
-      } #Close loop over countries
-      write.csv(data_pe_long, file=paste("Results/Table of Exports vs WW Revenue.csv",sep=""),row.names = F) #Exports results to make fact checking easier
-
+        
+        dev.off() #Stops plotting this graph file, so can begin next file for next country
+        
+      
+    #Exports results to make fact checking easier
+    write.csv(data_pe_long, file=paste("Results/Table of Exports vs WW Revenue.csv",sep=""),row.names = F) 
+    
+    #Alerts that ran to completion without errors
     print("Job Completed Successfully")
                 
